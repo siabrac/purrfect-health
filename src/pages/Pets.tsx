@@ -337,6 +337,7 @@ export default function Pets() {
                   value={weightFormData.weighed_at}
                   onChange={(e) => setWeightFormData({ ...weightFormData, weighed_at: e.target.value })}
                   className="input"
+                  step="60"
                   required
                 />
               </div>
