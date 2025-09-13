@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Pet } from '../types';
 import { Plus, Edit2, Trash2, Heart } from 'lucide-react';
 import { format, differenceInYears, differenceInMonths } from 'date-fns';
 
 export default function Pets() {
-  const { user } = useAuth();
+  const { user, supabaseClient } = useAuth();
+  const { t } = useLanguage();
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -27,7 +28,7 @@ export default function Pets() {
 
   const loadPets = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('pets')
         .select('*')
         .eq('user_id', user!.id)
@@ -56,13 +57,13 @@ export default function Pets() {
       };
 
       if (editingPet) {
-        const { error } = await supabase
+        const { error } = await supabaseClient
           .from('pets')
           .update(petData)
           .eq('id', editingPet.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase
+        const { error } = await supabaseClient
           .from('pets')
           .insert([petData]);
         if (error) throw error;
@@ -95,7 +96,7 @@ export default function Pets() {
     }
 
     try {
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from('pets')
         .delete()
         .eq('id', petId);
