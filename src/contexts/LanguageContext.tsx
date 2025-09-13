@@ -163,6 +163,22 @@ const translations = {
     'analytics.date': 'Date',
     'analytics.weight': 'Weight',
     'analytics.amount': 'Amount',
+    'analytics.weightTrends': 'Weight Trends',
+
+    // Dashboard specific
+    'dashboard.totalPets': 'Total Pets',
+    'dashboard.todayFeedings': 'Today\'s Feedings',
+    'dashboard.todayCalories': 'Today\'s Calories',
+    'dashboard.weightTrend': 'Weight Trend',
+    'dashboard.trend.up': 'Up',
+    'dashboard.trend.down': 'Down',
+    'dashboard.trend.stable': 'Stable',
+    'dashboard.trend.no-data': 'No Data',
+    'dashboard.noRecentFeedings': 'No recent feedings',
+    'dashboard.noRecentWeights': 'No recent weights',
+    'dashboard.managePets': 'Manage Pets',
+    'dashboard.manageFoods': 'Manage Foods',
+    'dashboard.viewAnalytics': 'View Analytics',
   },
   de: {
     // Navigation
@@ -314,6 +330,22 @@ const translations = {
     'analytics.date': 'Datum',
     'analytics.weight': 'Gewicht',
     'analytics.amount': 'Menge',
+    'analytics.weightTrends': 'Gewichtstrends',
+
+    // Dashboard specific
+    'dashboard.totalPets': 'Haustiere Gesamt',
+    'dashboard.todayFeedings': 'Heutige Fütterungen',
+    'dashboard.todayCalories': 'Heutige Kalorien',
+    'dashboard.weightTrend': 'Gewichtstrend',
+    'dashboard.trend.up': 'Steigend',
+    'dashboard.trend.down': 'Fallend',
+    'dashboard.trend.stable': 'Stabil',
+    'dashboard.trend.no-data': 'Keine Daten',
+    'dashboard.noRecentFeedings': 'Keine aktuellen Fütterungen',
+    'dashboard.noRecentWeights': 'Keine aktuellen Gewichtsmessungen',
+    'dashboard.managePets': 'Haustiere Verwalten',
+    'dashboard.manageFoods': 'Futter Verwalten',
+    'dashboard.viewAnalytics': 'Analysen Anzeigen',
   },
 };
 
