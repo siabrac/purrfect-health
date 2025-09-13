@@ -50,6 +50,31 @@ export function useAuth() {
     return () => subscription.unsubscribe();
   }, []);
 
+  const mockLogin = () => {
+    const mockUser = {
+      id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+      email: 'demo@pettracker.com',
+      user_metadata: {
+        full_name: 'Demo User',
+        avatar_url: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150'
+      }
+    };
+    
+    // Create a mock session for Supabase
+    const mockSession = {
+      access_token: 'mock-access-token',
+      refresh_token: 'mock-refresh-token',
+      expires_in: 3600,
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+      token_type: 'bearer',
+      user: mockUser
+    };
+    
+    // Set the session in Supabase client
+    supabase.auth.setSession(mockSession);
+    setUser(mockUser);
+  };
+
   const signOut = async () => {
     // Clear mock auth
     localStorage.removeItem('mock-auth');
