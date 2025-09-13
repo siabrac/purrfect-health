@@ -7,7 +7,7 @@ import { Plus, Edit2, Trash2, Utensils } from 'lucide-react';
 
 export default function Foods() {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, formatNumber } = useLanguage();
   const [foods, setFoods] = useState<Food[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -51,10 +51,10 @@ export default function Foods() {
       const foodData = {
         name: formData.name,
         brand: formData.brand || null,
-        calories_per_gram: formData.calories_per_gram ? parseFloat(formData.calories_per_gram) : null,
-        protein_per_gram: formData.protein_per_gram ? parseFloat(formData.protein_per_gram) : null,
-        fat_per_gram: formData.fat_per_gram ? parseFloat(formData.fat_per_gram) : null,
-        carbs_per_gram: formData.carbs_per_gram ? parseFloat(formData.carbs_per_gram) : null,
+        calories_per_gram: formData.calories_per_gram ? parseFloat(formData.calories_per_gram.replace(',', '.')) : null,
+        protein_per_gram: formData.protein_per_gram ? parseFloat(formData.protein_per_gram.replace(',', '.')) : null,
+        fat_per_gram: formData.fat_per_gram ? parseFloat(formData.fat_per_gram.replace(',', '.')) : null,
+        carbs_per_gram: formData.carbs_per_gram ? parseFloat(formData.carbs_per_gram.replace(',', '.')) : null,
         user_id: user!.id
       };
 
@@ -272,21 +272,21 @@ export default function Foods() {
                   {food.calories_per_gram && (
                     <div className="mt-3 space-y-1">
                       <p className="text-sm text-gray-700">
-                        <span className="font-medium">{t('foods.calories')}:</span> {food.calories_per_gram}/{t('common.grams')}
+                        <span className="font-medium">{t('foods.calories')}:</span> {formatNumber(food.calories_per_gram, 2)}/{t('common.grams')}
                       </p>
                       {food.protein_per_gram && (
                         <p className="text-sm text-gray-700">
-                          <span className="font-medium">{t('foods.protein')}:</span> {food.protein_per_gram}{t('common.grams')}/{t('common.grams')}
+                          <span className="font-medium">{t('foods.protein')}:</span> {formatNumber(food.protein_per_gram, 2)}{t('common.grams')}/{t('common.grams')}
                         </p>
                       )}
                       {food.fat_per_gram && (
                         <p className="text-sm text-gray-700">
-                          <span className="font-medium">{t('foods.fat')}:</span> {food.fat_per_gram}{t('common.grams')}/{t('common.grams')}
+                          <span className="font-medium">{t('foods.fat')}:</span> {formatNumber(food.fat_per_gram, 2)}{t('common.grams')}/{t('common.grams')}
                         </p>
                       )}
                       {food.carbs_per_gram && (
                         <p className="text-sm text-gray-700">
-                          <span className="font-medium">{t('foods.carbs')}:</span> {food.carbs_per_gram}{t('common.grams')}/{t('common.grams')}
+                          <span className="font-medium">{t('foods.carbs')}:</span> {formatNumber(food.carbs_per_gram, 2)}{t('common.grams')}/{t('common.grams')}
                         </p>
                       )}
                     </div>

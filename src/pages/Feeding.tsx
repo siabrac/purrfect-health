@@ -8,7 +8,7 @@ import { format } from 'date-fns';
 
 export default function Feeding() {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, formatNumber, formatDateTime } = useLanguage();
   const [pets, setPets] = useState<Pet[]>([]);
   const [foods, setFoods] = useState<Food[]>([]);
   const [feedings, setFeedings] = useState<FeedingEntry[]>([]);
@@ -81,9 +81,9 @@ export default function Feeding() {
     e.preventDefault();
     
     try {
-      const putOut = parseFloat(formData.amount_put_out);
-      const notEaten = formData.amount_not_eaten ? parseFloat(formData.amount_not_eaten) : 0;
-      const refilled = formData.amount_refilled ? parseFloat(formData.amount_refilled) : 0;
+      const putOut = parseFloat(formData.amount_put_out.replace(',', '.'));
+      const notEaten = formData.amount_not_eaten ? parseFloat(formData.amount_not_eaten.replace(',', '.')) : 0;
+      const refilled = formData.amount_refilled ? parseFloat(formData.amount_refilled.replace(',', '.')) : 0;
       const actualConsumed = calculateActualConsumed(putOut, notEaten, refilled);
       
       const selectedFood = foods.find(f => f.id === formData.food_id);
@@ -340,7 +340,7 @@ export default function Feeding() {
                   <div className="flex items-center space-x-4 mb-2">
                     <h3 className="text-lg font-semibold text-gray-900">{feeding.pet?.name}</h3>
                     <span className="text-sm text-gray-500">
-                      {format(new Date(feeding.fed_at), 'MMM dd, yyyy h:mm a')}
+                      {formatDateTime(feeding.fed_at)}
                     </span>
                   </div>
                   
@@ -349,23 +349,23 @@ export default function Feeding() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
                       <span className="font-medium text-gray-700">{t('feeding.putOut')}:</span>
-                      <p className="text-gray-900">{feeding.amount_put_out}{t('common.grams')}</p>
+                      <p className="text-gray-900">{formatNumber(feeding.amount_put_out)}{t('common.grams')}</p>
                     </div>
                     {feeding.amount_not_eaten && (
                       <div>
                         <span className="font-medium text-gray-700">{t('feeding.notEaten')}:</span>
-                        <p className="text-gray-900">{feeding.amount_not_eaten}{t('common.grams')}</p>
+                        <p className="text-gray-900">{formatNumber(feeding.amount_not_eaten)}{t('common.grams')}</p>
                       </div>
                     )}
                     {feeding.amount_refilled && (
                       <div>
                         <span className="font-medium text-gray-700">{t('feeding.refilled')}:</span>
-                        <p className="text-gray-900">{feeding.amount_refilled}{t('common.grams')}</p>
+                        <p className="text-gray-900">{formatNumber(feeding.amount_refilled)}{t('common.grams')}</p>
                       </div>
                     )}
                     <div>
                       <span className="font-medium text-gray-700">{t('feeding.consumed')}:</span>
-                      <p className="text-green-600 font-semibold">{feeding.actual_consumed}{t('common.grams')}</p>
+                      <p className="text-green-600 font-semibold">{formatNumber(feeding.actual_consumed || 0)}{t('common.grams')}</p>
                     </div>
                   </div>
 
@@ -373,7 +373,7 @@ export default function Feeding() {
                     <div className="mt-2">
                       <span className="text-sm font-medium text-gray-700">{t('feeding.calories')}: </span>
                       <span className="text-sm text-orange-600 font-semibold">
-                        {Math.round(feeding.calories_consumed)} {t('common.cal')}
+                        {formatNumber(feeding.calories_consumed, 0)} {t('common.cal')}
                       </span>
                     </div>
                   )}

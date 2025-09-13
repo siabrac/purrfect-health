@@ -8,7 +8,7 @@ import { format, differenceInYears, differenceInMonths } from 'date-fns';
 
 export default function Pets() {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, formatNumber, formatDateTime } = useLanguage();
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -123,7 +123,7 @@ export default function Pets() {
     try {
       const weightData = {
         pet_id: selectedPetForWeight.id,
-        weight: parseFloat(weightFormData.weight),
+        weight: parseFloat(weightFormData.weight.replace(',', '.')),
         notes: weightFormData.notes || null,
         user_id: user!.id,
         weighed_at: weightFormData.weighed_at ? new Date(weightFormData.weighed_at).toISOString() : new Date().toISOString()
@@ -315,11 +315,11 @@ export default function Pets() {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Add Weight for {selectedPetForWeight.name}
+              {t('dashboard.addWeightFor')} {selectedPetForWeight.name}
             </h2>
             <form onSubmit={handleWeightSubmit} className="space-y-4">
               <div>
-                <label className="label">Weight ({t('common.kg')}) *</label>
+                <label className="label">{t('dashboard.weightKg')} *</label>
                 <input
                   type="number"
                   step="0.1"
@@ -331,7 +331,7 @@ export default function Pets() {
               </div>
 
               <div>
-                <label className="label">Weighed At</label>
+                <label className="label">{t('dashboard.weighedAt')}</label>
                 <input
                   type="datetime-local"
                   value={weightFormData.weighed_at}
@@ -348,13 +348,13 @@ export default function Pets() {
                   onChange={(e) => setWeightFormData({ ...weightFormData, notes: e.target.value })}
                   className="input"
                   rows={3}
-                  placeholder="Optional notes about the weighing..."
+                  placeholder={t('dashboard.optionalNotes')}
                 />
               </div>
 
               <div className="flex space-x-3 pt-4">
                 <button type="submit" className="btn-primary flex-1">
-                  Add Weight
+                  {t('dashboard.addWeight')}
                 </button>
                 <button
                   type="button"
@@ -412,9 +412,9 @@ export default function Pets() {
                     )}
                     {latestWeight && (
                       <p className="text-sm text-gray-500">
-                        Current: {latestWeight.weight}{t('common.kg')} 
+                        Current: {formatNumber(latestWeight.weight)}{t('common.kg')} 
                         <span className="text-xs text-gray-400 ml-1">
-                          ({format(new Date(latestWeight.weighed_at), 'MMM dd')})
+                          ({formatDateTime(latestWeight.weighed_at)})
                         </span>
                       </p>
                     )}

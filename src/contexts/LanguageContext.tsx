@@ -6,6 +6,10 @@ interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
+  formatNumber: (num: number, decimals?: number) => string;
+  formatDateTime: (date: Date | string) => string;
+  formatDate: (date: Date | string) => string;
+  parseNumber: (value: string) => number;
 }
 
 const translations = {
@@ -157,6 +161,13 @@ const translations = {
     'common.month': 'month',
     'common.years': 'years',
     'common.year': 'year',
+    'dashboard.addWeight': 'Add Weight',
+    'dashboard.addFeeding': 'Add Feeding',
+    'dashboard.addWeightFor': 'Add Weight for',
+    'dashboard.addFeedingFor': 'Add Feeding for',
+    'dashboard.weighedAt': 'Weighed At',
+    'dashboard.weightKg': 'Weight (kg)',
+    'dashboard.optionalNotes': 'Optional notes about the weighing...',
   },
   de: {
     // Navigation
@@ -306,6 +317,13 @@ const translations = {
     'common.month': 'Monat',
     'common.years': 'Jahre',
     'common.year': 'Jahr',
+    'dashboard.addWeight': 'Gewicht hinzufügen',
+    'dashboard.addFeeding': 'Fütterung hinzufügen',
+    'dashboard.addWeightFor': 'Gewicht hinzufügen für',
+    'dashboard.addFeedingFor': 'Fütterung hinzufügen für',
+    'dashboard.weighedAt': 'Gewogen am',
+    'dashboard.weightKg': 'Gewicht (kg)',
+    'dashboard.optionalNotes': 'Optionale Notizen zum Wiegen...',
   }
 };
 
@@ -325,8 +343,67 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return translations[language][key] || key;
   };
 
+  const formatNumber = (num: number, decimals: number = 1): string => {
+    const formatted = num.toFixed(decimals);
+    return language === 'de' ? formatted.replace('.', ',') : formatted;
+  };
+
+  const formatDateTime = (date: Date | string): string => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    if (language === 'de') {
+      return dateObj.toLocaleString('de-DE', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+    }
+    return dateObj.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const formatDate = (date: Date | string): string => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    if (language === 'de') {
+      return dateObj.toLocaleDateString('de-DE', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    }
+    return dateObj.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const parseNumber = (value: string): number => {
+    if (language === 'de') {
+      // Replace comma with dot for parsing
+      return parseFloat(value.replace(',', '.'));
+    }
+    return parseFloat(value);
+  };
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ 
+      language, 
+      setLanguage, 
+      t, 
+      formatNumber, 
+      formatDateTime, 
+      formatDate, 
+      parseNumber 
+    }}>
       {children}
     </LanguageContext.Provider>
   );

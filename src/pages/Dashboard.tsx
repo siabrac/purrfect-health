@@ -9,7 +9,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, formatNumber, formatDateTime } = useLanguage();
   const [pets, setPets] = useState<Pet[]>([]);
   const [foods, setFoods] = useState<Food[]>([]);
   const [selectedPetId, setSelectedPetId] = useState<string>('');
@@ -164,7 +164,7 @@ export default function Dashboard() {
     try {
       const weightData = {
         pet_id: selectedPetId,
-        weight: parseFloat(weightFormData.weight),
+        weight: parseFloat(weightFormData.weight.replace(',', '.')),
         notes: weightFormData.notes || null,
         user_id: user!.id,
         weighed_at: weightFormData.weighed_at ? new Date(weightFormData.weighed_at).toISOString() : new Date().toISOString()
@@ -208,9 +208,9 @@ export default function Dashboard() {
     if (!selectedPetId) return;
     
     try {
-      const putOut = parseFloat(feedingFormData.amount_put_out);
-      const notEaten = feedingFormData.amount_not_eaten ? parseFloat(feedingFormData.amount_not_eaten) : 0;
-      const refilled = feedingFormData.amount_refilled ? parseFloat(feedingFormData.amount_refilled) : 0;
+      const putOut = parseFloat(feedingFormData.amount_put_out.replace(',', '.'));
+      const notEaten = feedingFormData.amount_not_eaten ? parseFloat(feedingFormData.amount_not_eaten.replace(',', '.')) : 0;
+      const refilled = feedingFormData.amount_refilled ? parseFloat(feedingFormData.amount_refilled.replace(',', '.')) : 0;
       const actualConsumed = calculateActualConsumed(putOut, notEaten, refilled);
       
       const selectedFood = foods.find(f => f.id === feedingFormData.food_id);
@@ -325,14 +325,14 @@ export default function Dashboard() {
                 className="flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Scale className="w-4 h-4 mr-1" />
-                Add Weight
+                {t('dashboard.addWeight')}
               </button>
               <button
                 onClick={() => setShowFeedingForm(true)}
                 className="flex items-center px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
               >
                 <Utensils className="w-4 h-4 mr-1" />
-                Add Feeding
+                {t('dashboard.addFeeding')}
               </button>
             </div>
           </div>
@@ -344,11 +344,11 @@ export default function Dashboard() {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Add Weight for {selectedPet.name}
+              {t('dashboard.addWeightFor')} {selectedPet.name}
             </h2>
             <form onSubmit={handleWeightSubmit} className="space-y-4">
               <div>
-                <label className="label">Weight ({t('common.kg')}) *</label>
+                <label className="label">{t('dashboard.weightKg')} *</label>
                 <input
                   type="number"
                   step="0.1"
@@ -360,7 +360,7 @@ export default function Dashboard() {
               </div>
 
               <div>
-                <label className="label">Weighed At</label>
+                <label className="label">{t('dashboard.weighedAt')}</label>
                 <input
                   type="datetime-local"
                   value={weightFormData.weighed_at}
@@ -377,13 +377,13 @@ export default function Dashboard() {
                   onChange={(e) => setWeightFormData({ ...weightFormData, notes: e.target.value })}
                   className="input"
                   rows={3}
-                  placeholder="Optional notes about the weighing..."
+                  placeholder={t('dashboard.optionalNotes')}
                 />
               </div>
 
               <div className="flex space-x-3 pt-4">
                 <button type="submit" className="btn-primary flex-1">
-                  Add Weight
+                  {t('dashboard.addWeight')}
                 </button>
                 <button
                   type="button"
@@ -406,7 +406,7 @@ export default function Dashboard() {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Add Feeding for {selectedPet.name}
+              {t('dashboard.addFeedingFor')} {selectedPet.name}
             </h2>
             <form onSubmit={handleFeedingSubmit} className="space-y-4">
               <div>
@@ -472,7 +472,7 @@ export default function Dashboard() {
 
               <div className="flex space-x-3 pt-4">
                 <button type="submit" className="btn-primary flex-1">
-                  Add Feeding
+                  {t('dashboard.addFeeding')}
                 </button>
                 <button
                   type="button"
@@ -510,16 +510,16 @@ export default function Dashboard() {
                     <p className="font-medium text-gray-900">{feeding.pet?.name}</p>
                     <p className="text-sm text-gray-600">{feeding.food?.name}</p>
                     <p className="text-xs text-gray-500">
-                      {format(new Date(feeding.fed_at), 'MMM dd, h:mm a')}
+                      {formatDateTime(feeding.fed_at)}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium text-gray-900">
-                      {feeding.actual_consumed}{t('common.grams')}
+                      {formatNumber(feeding.actual_consumed || 0)}{t('common.grams')}
                     </p>
                     {feeding.calories_consumed && (
                       <p className="text-xs text-gray-500">
-                        {Math.round(feeding.calories_consumed)} {t('common.cal')}
+                        {formatNumber(feeding.calories_consumed, 0)} {t('common.cal')}
                       </p>
                     )}
                   </div>
