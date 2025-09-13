@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 
 // Mock user for development
 const MOCK_USER = {
-  id: 'mock-user-123',
+  id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
   email: 'demo@pettracker.com',
   user_metadata: {
     full_name: 'Demo User',
