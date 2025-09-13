@@ -6,7 +6,7 @@ import { Plus, Edit2, Trash2, Heart } from 'lucide-react';
 import { format, differenceInYears, differenceInMonths } from 'date-fns';
 
 export default function Pets() {
-  const { user, supabaseClient } = useAuth();
+  const { user } = useAuth();
   const { t } = useLanguage();
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +28,7 @@ export default function Pets() {
 
   const loadPets = async () => {
     try {
-      const { data, error } = await supabaseClient
+      const { data, error } = await supabase
         .from('pets')
         .select('*')
         .eq('user_id', user!.id)
@@ -57,13 +57,13 @@ export default function Pets() {
       };
 
       if (editingPet) {
-        const { error } = await supabaseClient
+        const { error } = await supabase
           .from('pets')
           .update(petData)
           .eq('id', editingPet.id);
         if (error) throw error;
       } else {
-        const { error } = await supabaseClient
+        const { error } = await supabase
           .from('pets')
           .insert([petData]);
         if (error) throw error;
@@ -96,7 +96,7 @@ export default function Pets() {
     }
 
     try {
-      const { error } = await supabaseClient
+      const { error } = await supabase
         .from('pets')
         .delete()
         .eq('id', petId);
