@@ -199,11 +199,12 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="space-y-4">
             {pets.map((pet) => {
               const latestWeight = getLatestWeight(pet.id);
               
               return (
-                <div key={pet.id} className="card">
+                <div key={pet.id} className="card w-full">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <h3 className="text-lg font-semibold text-gray-900">{pet.name}</h3>
@@ -252,6 +253,41 @@ export default function Dashboard() {
                 </div>
               );
             })}
+          </div>
+
+          {/* Recent Feedings */}
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('dashboard.recentFeedings')}</h2>
+            {recentFeedings.length === 0 ? (
+              <div className="card text-center py-8">
+                <Utensils className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                <p className="text-gray-500">{t('dashboard.noRecentFeedings')}</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentFeedings.map((feeding) => (
+                  <div key={feeding.id} className="card">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3">
+                          <h4 className="font-medium text-gray-900">{feeding.pet?.name}</h4>
+                          <span className="text-sm text-gray-500">{feeding.food?.name}</span>
+                        </div>
+                        <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600">
+                          <span>{formatNumber(feeding.actual_consumed || 0)}{t('common.grams')} consumed</span>
+                          {feeding.calories_consumed && (
+                            <span>{formatNumber(feeding.calories_consumed, 0)} {t('common.cal')}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-gray-500">{formatDateTime(feeding.fed_at)}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
