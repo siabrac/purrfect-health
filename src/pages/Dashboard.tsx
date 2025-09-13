@@ -18,6 +18,8 @@ export default function Feeding() {
   const [lastFeeding, setLastFeeding] = useState<FeedingEntry | null>(null);
   const [lastFeeding, setLastFeeding] = useState<FeedingEntry | null>(null);
   const [formData, setFormData] = useState({
+    pet_id: '',
+    food_id: '',
     current_bowl_weight: '',
   });
 
@@ -87,7 +89,6 @@ export default function Feeding() {
       setLastFeeding(data && data.length > 0 ? data[0] : null);
     } catch (error) {
       console.error('Error loading last feeding:', error);
-                <label className="label">{t('feeding.currentBowlWeight')} *</label>
       setLastFeeding(null);
       return;
     }
@@ -322,6 +323,27 @@ export default function Feeding() {
                 />
               </div>
 
+              {lastFeeding && formData.current_bowl_weight && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <p className="text-sm font-medium text-green-900 mb-1">
+                    {t('feeding.calculatedConsumption')}
+                  </p>
+                  <p className="text-sm text-green-700">
+                    {formatNumber(calculateActualConsumed(parseNumber(formData.current_bowl_weight), lastFeeding.amount_put_out))}{t('common.grams')}
+                  </p>
+                </div>
+              )}
+
+              <div>
+                <label className="label">{t('feeding.fedAt')}</label>
+                <input
+                  type="datetime-local"
+                  value={formData.fed_at}
+                  onChange={(e) => setFormData({ ...formData, fed_at: e.target.value })}
+                  className="input"
+                />
+              </div>
+
               <div>
                 <label className="label">{t('feeding.notes')}</label>
                 <textarea
@@ -345,6 +367,8 @@ export default function Feeding() {
                     setFormData({
                       pet_id: '',
                       food_id: '',
+                      current_bowl_weight: '',
+                      fed_at: '',
                       notes: ''
                     });
                   }}
