@@ -155,102 +155,76 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Feedings */}
-        <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.recentFeedings')}</h2>
-            <Calendar className="h-5 w-5 text-gray-400" />
+        {/* Pet Cards with Action Buttons */}
+        {pets.length === 0 ? (
+          <div className="lg:col-span-2 text-center py-12">
+            <Heart className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900">{t('pets.noPets')}</h3>
+            <p className="mt-1 text-sm text-gray-500">{t('pets.noPetsDescription')}</p>
+            <div className="mt-6">
+              <a href="/pets" className="btn-primary">
+                <Plus className="w-4 h-4 mr-2" />
+                {t('pets.addPet')}
+              </a>
+            </div>
           </div>
-          {recentFeedings.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">{t('dashboard.noRecentFeedings')}</p>
-          ) : (
-            <div className="space-y-3">
-              {recentFeedings.map((feeding) => (
-                <div key={feeding.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
-                  <div>
-                    <p className="font-medium text-gray-900">{feeding.pet?.name}</p>
-                    <p className="text-sm text-gray-600">{feeding.food?.name}</p>
-                    <p className="text-xs text-gray-500">{formatDateTime(feeding.fed_at)}</p>
+        ) : (
+          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {pets.map((pet) => {
+              const latestWeight = getLatestWeight(pet.id);
+              
+              return (
+                <div key={pet.id} className="card">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900">{pet.name}</h3>
+                      <p className="text-sm text-gray-600 capitalize">{t(`species.${pet.species}`)}</p>
+                      {pet.breed && (
+                        <p className="text-sm text-gray-500">{pet.breed}</p>
+                      )}
+                      {pet.birth_date && (
+                        <p className="text-sm text-gray-500">
+                          {t('pets.age')}: {getAge(pet.birth_date)}
+                        </p>
+                      )}
+                      {pet.target_weight && (
+                        <p className="text-sm text-gray-500">
+                          {t('pets.target')}: {pet.target_weight}{t('common.kg')}
+                        </p>
+                      )}
+                      {latestWeight && (
+                        <p className="text-sm text-gray-500">
+                          Current: {formatNumber(latestWeight.weight)}{t('common.kg')} 
+                          <span className="text-xs text-gray-400 ml-1">
+                            ({formatDateTime(latestWeight.weighed_at)})
+                          </span>
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-green-600">
-                      {formatNumber(feeding.actual_consumed || 0)}{t('common.grams')}
-                    </p>
-                    {feeding.calories_consumed && (
-                      <p className="text-xs text-orange-600">
-                        {formatNumber(feeding.calories_consumed, 0)} {t('common.cal')}
-                      </p>
-                    )}
+                  
+                  {/* Action Buttons */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => handleAddWeight(pet)}
+                      className="flex items-center justify-center px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
+                    >
+                      <Scale className="w-4 h-4 mr-2" />
+                      {t('dashboard.addWeight')}
+                    </button>
+                    <a
+                      href="/feeding"
+                      className="flex items-center justify-center px-3 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors text-sm font-medium"
+                    >
+                      <Utensils className="w-4 h-4 mr-2" />
+                      {t('dashboard.addFeeding')}
+                    </a>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Recent Weights */}
-        <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.recentWeights')}</h2>
-            <Scale className="h-5 w-5 text-gray-400" />
+              );
+            })}
           </div>
-          {recentWeights.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">{t('dashboard.noRecentWeights')}</p>
-          ) : (
-            <div className="space-y-3">
-              {recentWeights.map((weight) => (
-                <div key={weight.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
-                  <div>
-                    <p className="font-medium text-gray-900">{weight.pet?.name}</p>
-                    <p className="text-xs text-gray-500">{formatDateTime(weight.weighed_at)}</p>
-                    {weight.notes && (
-                      <p className="text-xs text-gray-400 italic">{weight.notes}</p>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-semibold text-blue-600">
-                      {formatNumber(weight.weight)}{t('common.kg')}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="card">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('dashboard.quickActions')}</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <a
-            href="/pets"
-            className="flex items-center p-3 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors"
-          >
-            <Heart className="h-6 w-6 text-primary-600 mr-3" />
-            <span className="font-medium text-primary-700">{t('dashboard.managePets')}</span>
-          </a>
-          <a
-            href="/foods"
-            className="flex items-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
-          >
-            <Utensils className="h-6 w-6 text-green-600 mr-3" />
-            <span className="font-medium text-green-700">{t('dashboard.manageFoods')}</span>
-          </a>
-          <a
-            href="/feeding"
-            className="flex items-center p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors"
-          >
-            <Plus className="h-6 w-6 text-orange-600 mr-3" />
-            <span className="font-medium text-orange-700">{t('dashboard.addFeeding')}</span>
-          </a>
-          <a
-            href="/analytics"
-            className="flex items-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-          >
-            <TrendingUp className="h-6 w-6 text-blue-600 mr-3" />
-            <span className="font-medium text-blue-700">{t('dashboard.viewAnalytics')}</span>
-          </a>
+        )}
         </div>
       </div>
     </div>
