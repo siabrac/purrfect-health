@@ -185,7 +185,6 @@ export default function Dashboard() {
   };
 
   const handleAddWeight = (pet: Pet) => {
-    setSelectedPetForWeight(pet);
     setWeightFormData({ 
       weight: '', 
       notes: '', 
