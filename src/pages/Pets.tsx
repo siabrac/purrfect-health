@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../lib/supabase';
-import { Pet } from '../types';
-import { Plus, Edit2, Trash2, Heart } from 'lucide-react';
+import { Pet, WeightEntry } from '../types';
+import { Plus, Edit2, Trash2, Heart, Scale } from 'lucide-react';
 import { format, differenceInYears, differenceInMonths } from 'date-fns';
 
 export default function Pets() {
@@ -12,7 +12,10 @@ export default function Pets() {
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [showWeightForm, setShowWeightForm] = useState(false);
   const [editingPet, setEditingPet] = useState<Pet | null>(null);
+  const [selectedPetForWeight, setSelectedPetForWeight] = useState<Pet | null>(null);
+  const [weightEntries, setWeightEntries] = useState<WeightEntry[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     species: 'dog' as Pet['species'],
@@ -20,12 +23,18 @@ export default function Pets() {
     birth_date: '',
     target_weight: ''
   });
+  const [weightFormData, setWeightFormData] = useState({
+    weight: '',
+    notes: ''
+  });
 
   useEffect(() => {
     if (user) {
       loadPets();
     }
   }, [user]);
+
+  useEffect(() => { loadWeightEntries(); }, [pets]);
 
   const loadPets = async () => {
     try {
@@ -41,6 +50,22 @@ export default function Pets() {
       console.error('Error loading pets:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadWeightEntries = async () => {
+    if (pets.length === 0) return;
+    
+    try {
+      const { data } = await supabase
+        .from('weight_entries')
+        .select('*, pet:pets(*)')
+        .eq('user_id', user!.id)
+        .order('weighed_at', { ascending: false });
+      
+      setWeightEntries(data || []);
+    } catch (error) {
+      console.error('Error loading weight entries:', error);
     }
   };
 
@@ -79,6 +104,40 @@ export default function Pets() {
     }
   };
 
+  const handleWeightSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedPetForWeight) return;
+    
+    try {
+      const weightData = {
+        pet_id: selectedPetForWeight.id,
+        weight: parseFloat(weightFormData.weight),
+        notes: weightFormData.notes || null,
+        user_id: user!.id,
+        weighed_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('weight_entries')
+        .insert([weightData]);
+      
+      if (error) throw error;
+
+      setShowWeightForm(false);
+      setSelectedPetForWeight(null);
+      setWeightFormData({ weight: '', notes: '' });
+      loadWeightEntries();
+    } catch (error) {
+      console.error('Error saving weight entry:', error);
+    }
+  };
+
+  const handleAddWeight = (pet: Pet) => {
+    setSelectedPetForWeight(pet);
+    setShowWeightForm(true);
+  };
+
   const handleEdit = (pet: Pet) => {
     setEditingPet(pet);
     setFormData({
@@ -107,6 +166,10 @@ export default function Pets() {
     } catch (error) {
       console.error('Error deleting pet:', error);
     }
+  };
+
+  const getLatestWeight = (petId: string) => {
+    return weightEntries.find(entry => entry.pet_id === petId);
   };
 
   const getAge = (birthDate: string) => {
@@ -231,6 +294,58 @@ export default function Pets() {
         </div>
       )}
 
+      {/* Weight Entry Form Modal */}
+      {showWeightForm && selectedPetForWeight && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Add Weight for {selectedPetForWeight.name}
+            </h2>
+            <form onSubmit={handleWeightSubmit} className="space-y-4">
+              <div>
+                <label className="label">Weight ({t('common.kg')}) *</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={weightFormData.weight}
+                  onChange={(e) => setWeightFormData({ ...weightFormData, weight: e.target.value })}
+                  className="input"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="label">{t('feeding.notes')}</label>
+                <textarea
+                  value={weightFormData.notes}
+                  onChange={(e) => setWeightFormData({ ...weightFormData, notes: e.target.value })}
+                  className="input"
+                  rows={3}
+                  placeholder="Optional notes about the weighing..."
+                />
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button type="submit" className="btn-primary flex-1">
+                  Add Weight
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowWeightForm(false);
+                    setSelectedPetForWeight(null);
+                    setWeightFormData({ weight: '', notes: '' });
+                  }}
+                  className="btn-secondary flex-1"
+                >
+                  {t('pets.cancel')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Pets Grid */}
       {pets.length === 0 ? (
         <div className="text-center py-12">
@@ -246,43 +361,64 @@ export default function Pets() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {pets.map((pet) => (
-            <div key={pet.id} className="card">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900">{pet.name}</h3>
-                  <p className="text-sm text-gray-600 capitalize">{t(`species.${pet.species}`)}</p>
-                  {pet.breed && (
-                    <p className="text-sm text-gray-500">{pet.breed}</p>
-                  )}
-                  {pet.birth_date && (
-                    <p className="text-sm text-gray-500">
-                      {t('pets.age')}: {getAge(pet.birth_date)}
-                    </p>
-                  )}
-                  {pet.target_weight && (
-                    <p className="text-sm text-gray-500">
-                      {t('pets.target')}: {pet.target_weight}{t('common.kg')}
-                    </p>
-                  )}
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleEdit(pet)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(pet.id)}
-                    className="text-gray-400 hover:text-red-600"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+          {pets.map((pet) => {
+            const latestWeight = getLatestWeight(pet.id);
+            
+            return (
+              <div key={pet.id} className="card">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900">{pet.name}</h3>
+                    <p className="text-sm text-gray-600 capitalize">{t(`species.${pet.species}`)}</p>
+                    {pet.breed && (
+                      <p className="text-sm text-gray-500">{pet.breed}</p>
+                    )}
+                    {pet.birth_date && (
+                      <p className="text-sm text-gray-500">
+                        {t('pets.age')}: {getAge(pet.birth_date)}
+                      </p>
+                    )}
+                    {pet.target_weight && (
+                      <p className="text-sm text-gray-500">
+                        {t('pets.target')}: {pet.target_weight}{t('common.kg')}
+                      </p>
+                    )}
+                    {latestWeight && (
+                      <p className="text-sm text-gray-500">
+                        Current: {latestWeight.weight}{t('common.kg')} 
+                        <span className="text-xs text-gray-400 ml-1">
+                          ({format(new Date(latestWeight.weighed_at), 'MMM dd')})
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleAddWeight(pet)}
+                        className="text-gray-400 hover:text-blue-600"
+                        title="Add Weight"
+                      >
+                        <Scale className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleEdit(pet)}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(pet.id)}
+                        className="text-gray-400 hover:text-red-600"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
