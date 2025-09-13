@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { LanguageProvider } from './contexts/LanguageContext';
 import { useAuth } from './hooks/useAuth';
 import Layout from './components/Layout';
 import AuthForm from './components/AuthForm';
@@ -21,22 +22,28 @@ function App() {
   }
 
   if (!user) {
-    return <AuthForm />;
+    return (
+      <LanguageProvider>
+        <AuthForm />
+      </LanguageProvider>
+    );
   }
 
   return (
-    <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/pets" element={<Pets />} />
-          <Route path="/foods" element={<Foods />} />
-          <Route path="/feeding" element={<Feeding />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Layout>
-    </Router>
+    <LanguageProvider>
+      <Router>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/pets" element={<Pets />} />
+            <Route path="/foods" element={<Foods />} />
+            <Route path="/feeding" element={<Feeding />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Layout>
+      </Router>
+    </LanguageProvider>
   );
 }
 

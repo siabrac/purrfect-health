@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../lib/supabase';
+import LanguageSelector from './LanguageSelector';
 import { Heart, User } from 'lucide-react';
 
 export default function AuthForm() {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [mockLoading, setMockLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -83,13 +86,17 @@ export default function AuthForm() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
+        <div className="absolute top-4 right-4">
+          <LanguageSelector />
+        </div>
+        
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-100 rounded-full mb-4">
             <Heart className="w-8 h-8 text-primary-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Pet Tracker</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('auth.title')}</h1>
           <p className="text-gray-600">
-            Sign in to your account
+            {t('auth.subtitle')}
           </p>
         </div>
 
@@ -134,7 +141,7 @@ export default function AuthForm() {
               />
             </svg>
             )}
-            {loading ? 'Signing in...' : 'Continue with Google'}
+            {loading ? t('auth.signingIn') : t('auth.continueWithGoogle')}
           </button>
 
           <div className="relative my-6">
@@ -157,23 +164,23 @@ export default function AuthForm() {
             ) : (
               <User className="w-5 h-5 mr-3" />
             )}
-            {mockLoading ? 'Logging in...' : 'Mock Login (Dev Only)'}
+            {mockLoading ? t('auth.loggingIn') : t('auth.mockLogin')}
           </button>
         </div>
 
         <div className="mt-6 text-center">
           <p className="text-xs text-gray-500">
-            By signing in, you agree to our terms of service and privacy policy.
+            {t('auth.terms')}
           </p>
         </div>
         
         {/* Development info */}
         <div className="mt-4 text-center">
           <p className="text-xs text-gray-400 mb-2">
-            Use "Mock Login" for development in Bolt preview
+            {t('auth.devInfo1')}
           </p>
           <p className="text-xs text-gray-400">
-            Use "Google" for testing in separate tab
+            {t('auth.devInfo2')}
           </p>
         </div>
       </div>

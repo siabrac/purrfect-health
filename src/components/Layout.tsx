@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../hooks/useAuth';
+import LanguageSelector from './LanguageSelector';
 import { 
   Home, 
   Heart, 
@@ -18,15 +20,16 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const { signOut } = useAuth();
+  const { t } = useLanguage();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   const navigation = [
-    { name: 'Dashboard', href: '/', icon: Home },
-    { name: 'Pets', href: '/pets', icon: Heart },
-    { name: 'Foods', href: '/foods', icon: Utensils },
-    { name: 'Feeding', href: '/feeding', icon: PlusCircle },
-    { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+    { name: t('nav.dashboard'), href: '/', icon: Home },
+    { name: t('nav.pets'), href: '/pets', icon: Heart },
+    { name: t('nav.foods'), href: '/foods', icon: Utensils },
+    { name: t('nav.feeding'), href: '/feeding', icon: PlusCircle },
+    { name: t('nav.analytics'), href: '/analytics', icon: BarChart3 },
   ];
 
   const handleSignOut = async () => {
@@ -40,7 +43,7 @@ export default function Layout({ children }: LayoutProps) {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setMobileMenuOpen(false)} />
         <div className="fixed inset-y-0 left-0 flex w-full max-w-xs flex-col bg-white shadow-xl">
           <div className="flex h-16 items-center justify-between px-4">
-            <h1 className="text-xl font-bold text-gray-900">Pet Tracker</h1>
+            <h1 className="text-xl font-bold text-gray-900">{t('auth.title')}</h1>
             <button
               onClick={() => setMobileMenuOpen(false)}
               className="text-gray-400 hover:text-gray-600"
@@ -70,12 +73,15 @@ export default function Layout({ children }: LayoutProps) {
             })}
           </nav>
           <div className="border-t border-gray-200 p-4">
+            <div className="mb-4">
+              <LanguageSelector />
+            </div>
             <button
               onClick={handleSignOut}
               className="flex w-full items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg"
             >
               <LogOut className="mr-3 h-5 w-5" />
-              Sign Out
+              {t('nav.signOut')}
             </button>
           </div>
         </div>
@@ -85,7 +91,7 @@ export default function Layout({ children }: LayoutProps) {
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
         <div className="flex flex-col flex-grow bg-white border-r border-gray-200">
           <div className="flex items-center h-16 px-6 border-b border-gray-200">
-            <h1 className="text-xl font-bold text-gray-900">Pet Tracker</h1>
+            <h1 className="text-xl font-bold text-gray-900">{t('auth.title')}</h1>
           </div>
           <nav className="flex-1 space-y-1 px-4 py-4">
             {navigation.map((item) => {
@@ -108,12 +114,15 @@ export default function Layout({ children }: LayoutProps) {
             })}
           </nav>
           <div className="border-t border-gray-200 p-4">
+            <div className="mb-4">
+              <LanguageSelector />
+            </div>
             <button
               onClick={handleSignOut}
               className="flex w-full items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg"
             >
               <LogOut className="mr-3 h-5 w-5" />
-              Sign Out
+              {t('nav.signOut')}
             </button>
           </div>
         </div>
@@ -129,7 +138,7 @@ export default function Layout({ children }: LayoutProps) {
           >
             <Menu className="h-6 w-6" />
           </button>
-          <h1 className="text-lg font-semibold text-gray-900">Pet Tracker</h1>
+          <h1 className="text-lg font-semibold text-gray-900">{t('auth.title')}</h1>
           <div className="w-6" /> {/* Spacer */}
         </div>
 
