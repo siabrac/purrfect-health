@@ -6,23 +6,37 @@ export default function AuthForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = async (e: React.MouseEvent) => {
+    e.preventDefault();
     setLoading(true);
     setError(null);
+
+    console.log('Attempting Google sign-in...');
 
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin
+          redirectTo: `${window.location.origin}/`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         }
       });
-      if (error) throw error;
+      
+      if (error) {
+        console.error('Google sign-in error:', error);
+        throw error;
+      }
+      
+      console.log('Google sign-in initiated successfully');
     } catch (error: any) {
+      console.error('Sign-in error:', error);
       setError(error.message);
-    } finally {
       setLoading(false);
     }
+    // Don't set loading to false here as the redirect should happen
   };
 
   return (
@@ -41,15 +55,25 @@ export default function AuthForm() {
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
             <p className="text-sm text-red-600">{error}</p>
+            <button 
+              onClick={() => setError(null)}
+              className="text-xs text-red-500 hover:text-red-700 mt-1"
+            >
+              Dismiss
+            </button>
           </div>
         )}
 
         <div className="space-y-4">
           <button
+            type="button"
             onClick={handleGoogleSignIn}
             disabled={loading}
             className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
           >
+            {loading ? (
+              <div className="w-5 h-5 mr-3 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600"></div>
+            ) : (
             <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
               <path
                 fill="#4285F4"
@@ -68,6 +92,7 @@ export default function AuthForm() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
+            )}
             {loading ? 'Signing in...' : 'Continue with Google'}
           </button>
         </div>
@@ -75,6 +100,13 @@ export default function AuthForm() {
         <div className="mt-6 text-center">
           <p className="text-xs text-gray-500">
             By signing in, you agree to our terms of service and privacy policy.
+          </p>
+        </div>
+        
+        {/* Debug info - remove in production */}
+        <div className="mt-4 text-center">
+          <p className="text-xs text-gray-400">
+            Debug: Check browser console for sign-in logs
           </p>
         </div>
       </div>
