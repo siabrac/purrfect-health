@@ -6,7 +6,7 @@ import { Pet, Food, FeedingEntry } from '../types';
 import { Plus, Edit2, Trash2, PlusCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
-export default function Feeding() {
+export default function Dashboard() {
   const { user } = useAuth();
   const { t, formatNumber, formatDateTime } = useLanguage();
   const [pets, setPets] = useState<Pet[]>([]);
