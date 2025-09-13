@@ -199,95 +199,96 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="space-y-4">
-            {pets.map((pet) => {
-              const latestWeight = getLatestWeight(pet.id);
-              
-              return (
-                <div key={pet.id} className="card w-full">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900">{pet.name}</h3>
-                      <p className="text-sm text-gray-600 capitalize">{t(`species.${pet.species}`)}</p>
-                      {pet.breed && (
-                        <p className="text-sm text-gray-500">{pet.breed}</p>
-                      )}
-                      {pet.birth_date && (
-                        <p className="text-sm text-gray-500">
-                          {t('pets.age')}: {getAge(pet.birth_date)}
-                        </p>
-                      )}
-                      {pet.target_weight && (
-                        <p className="text-sm text-gray-500">
-                          {t('pets.target')}: {pet.target_weight}{t('common.kg')}
-                        </p>
-                      )}
-                      {latestWeight && (
-                        <p className="text-sm text-gray-500">
-                          Current: {formatNumber(latestWeight.weight)}{t('common.kg')} 
-                          <span className="text-xs text-gray-400 ml-1">
-                            ({formatDateTime(latestWeight.weighed_at)})
-                          </span>
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Action Buttons */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => handleAddWeight(pet)}
-                      className="flex items-center justify-center px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
-                    >
-                      <Scale className="w-4 h-4 mr-2" />
-                      {t('dashboard.addWeight')}
-                    </button>
-                    <a
-                      href="/feeding"
-                      className="flex items-center justify-center px-3 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors text-sm font-medium"
-                    >
-                      <Utensils className="w-4 h-4 mr-2" />
-                      {t('dashboard.addFeeding')}
-                    </a>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Recent Feedings */}
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('dashboard.recentFeedings')}</h2>
-            {recentFeedings.length === 0 ? (
-              <div className="card text-center py-8">
-                <Utensils className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                <p className="text-gray-500">{t('dashboard.noRecentFeedings')}</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {recentFeedings.map((feeding) => (
-                  <div key={feeding.id} className="card">
-                    <div className="flex items-center justify-between">
+            <div className="space-y-4">
+              {pets.map((pet) => {
+                const latestWeight = getLatestWeight(pet.id);
+                
+                return (
+                  <div key={pet.id} className="card w-full">
+                    <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
-                        <div className="flex items-center space-x-3">
-                          <h4 className="font-medium text-gray-900">{feeding.pet?.name}</h4>
-                          <span className="text-sm text-gray-500">{feeding.food?.name}</span>
-                        </div>
-                        <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600">
-                          <span>{formatNumber(feeding.actual_consumed || 0)}{t('common.grams')} consumed</span>
-                          {feeding.calories_consumed && (
-                            <span>{formatNumber(feeding.calories_consumed, 0)} {t('common.cal')}</span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-gray-500">{formatDateTime(feeding.fed_at)}</p>
+                        <h3 className="text-lg font-semibold text-gray-900">{pet.name}</h3>
+                        <p className="text-sm text-gray-600 capitalize">{t(`species.${pet.species}`)}</p>
+                        {pet.breed && (
+                          <p className="text-sm text-gray-500">{pet.breed}</p>
+                        )}
+                        {pet.birth_date && (
+                          <p className="text-sm text-gray-500">
+                            {t('pets.age')}: {getAge(pet.birth_date)}
+                          </p>
+                        )}
+                        {pet.target_weight && (
+                          <p className="text-sm text-gray-500">
+                            {t('pets.target')}: {pet.target_weight}{t('common.kg')}
+                          </p>
+                        )}
+                        {latestWeight && (
+                          <p className="text-sm text-gray-500">
+                            Current: {formatNumber(latestWeight.weight)}{t('common.kg')} 
+                            <span className="text-xs text-gray-400 ml-1">
+                              ({formatDateTime(latestWeight.weighed_at)})
+                            </span>
+                          </p>
+                        )}
                       </div>
                     </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => handleAddWeight(pet)}
+                        className="flex items-center justify-center px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
+                      >
+                        <Scale className="w-4 h-4 mr-2" />
+                        {t('dashboard.addWeight')}
+                      </button>
+                      <a
+                        href="/feeding"
+                        className="flex items-center justify-center px-3 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors text-sm font-medium"
+                      >
+                        <Utensils className="w-4 h-4 mr-2" />
+                        {t('dashboard.addFeeding')}
+                      </a>
+                    </div>
                   </div>
-                ))}
-              </div>
-            )}
+                );
+              })}
+            </div>
+
+            {/* Recent Feedings */}
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('dashboard.recentFeedings')}</h2>
+              {recentFeedings.length === 0 ? (
+                <div className="card text-center py-8">
+                  <Utensils className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                  <p className="text-gray-500">{t('dashboard.noRecentFeedings')}</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recentFeedings.map((feeding) => (
+                    <div key={feeding.id} className="card">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3">
+                            <h4 className="font-medium text-gray-900">{feeding.pet?.name}</h4>
+                            <span className="text-sm text-gray-500">{feeding.food?.name}</span>
+                          </div>
+                          <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600">
+                            <span>{formatNumber(feeding.actual_consumed || 0)}{t('common.grams')} consumed</span>
+                            {feeding.calories_consumed && (
+                              <span>{formatNumber(feeding.calories_consumed, 0)} {t('common.cal')}</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-gray-500">{formatDateTime(feeding.fed_at)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
