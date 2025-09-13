@@ -418,6 +418,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return parseFloat(value);
   };
 
+  // Make parseNumber available globally for components that need it
+  (window as any).parseNumber = parseNumber;
+
   return (
     <LanguageContext.Provider value={{
       language,

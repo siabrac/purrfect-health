@@ -104,6 +104,10 @@ export default function Feeding() {
     return actualConsumed * food.calories_per_gram;
   };
 
+  const parseNumber = (value: string): number => {
+    return parseFloat(value.replace(',', '.'));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
