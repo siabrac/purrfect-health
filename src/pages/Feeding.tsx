@@ -15,12 +15,11 @@ export default function Feeding() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingFeeding, setEditingFeeding] = useState<FeedingEntry | null>(null);
+  const [lastFeeding, setLastFeeding] = useState<FeedingEntry | null>(null);
   const [formData, setFormData] = useState({
     pet_id: '',
     food_id: '',
-    amount_put_out: '',
-    amount_not_eaten: '',
-    amount_refilled: '',
+    current_bowl_weight: '',
     fed_at: '',
     notes: ''
   });
@@ -68,8 +67,36 @@ export default function Feeding() {
     }
   };
 
-  const calculateActualConsumed = (putOut: number, notEaten: number = 0, refilled: number = 0) => {
-    return putOut + refilled - notEaten;
+  const loadLastFeeding = async (petId: string, foodId: string) => {
+    if (!petId || !foodId) {
+      setLastFeeding(null);
+      return;
+    }
+
+    try {
+      const { data } = await supabase
+        .from('feeding_entries')
+        .select(`
+          *,
+          pet:pets(*),
+          food:foods(*)
+        `)
+        .eq('user_id', user!.id)
+        .eq('pet_id', petId)
+        .eq('food_id', foodId)
+        .order('fed_at', { ascending: false })
+        .limit(1);
+
+      setLastFeeding(data && data.length > 0 ? data[0] : null);
+    } catch (error) {
+      console.error('Error loading last feeding:', error);
+      setLastFeeding(null);
+    }
+  };
+
+  const calculateActualConsumed = (currentBowlWeight: number, lastBowlWeight: number = 0) => {
+    // Bowl weights cancel out, so we just calculate the difference in food weight
+    return Math.max(0, lastBowlWeight - currentBowlWeight);
   };
 
   const calculateCalories = (actualConsumed: number, food: Food) => {
@@ -81,10 +108,9 @@ export default function Feeding() {
     e.preventDefault();
     
     try {
-      const putOut = parseFloat(formData.amount_put_out.replace(',', '.'));
-      const notEaten = formData.amount_not_eaten ? parseFloat(formData.amount_not_eaten.replace(',', '.')) : 0;
-      const refilled = formData.amount_refilled ? parseFloat(formData.amount_refilled.replace(',', '.')) : 0;
-      const actualConsumed = calculateActualConsumed(putOut, notEaten, refilled);
+      const currentBowlWeight = parseNumber(formData.current_bowl_weight);
+      const lastBowlWeight = lastFeeding?.amount_put_out || 0;
+      const actualConsumed = calculateActualConsumed(currentBowlWeight, lastBowlWeight);
       
       const selectedFood = foods.find(f => f.id === formData.food_id);
       const caloriesConsumed = selectedFood ? calculateCalories(actualConsumed, selectedFood) : null;
@@ -92,9 +118,9 @@ export default function Feeding() {
       const feedingData = {
         pet_id: formData.pet_id,
         food_id: formData.food_id,
-        amount_put_out: putOut,
-        amount_not_eaten: notEaten || null,
-        amount_refilled: refilled || null,
+        amount_put_out: currentBowlWeight,
+        amount_not_eaten: null,
+        amount_refilled: null,
         actual_consumed: actualConsumed,
         calories_consumed: caloriesConsumed,
         fed_at: formData.fed_at || new Date().toISOString(),
@@ -117,12 +143,11 @@ export default function Feeding() {
 
       setShowForm(false);
       setEditingFeeding(null);
+      setLastFeeding(null);
       setFormData({
         pet_id: '',
         food_id: '',
-        amount_put_out: '',
-        amount_not_eaten: '',
-        amount_refilled: '',
+        current_bowl_weight: '',
         fed_at: '',
         notes: ''
       });
@@ -137,12 +162,11 @@ export default function Feeding() {
     setFormData({
       pet_id: feeding.pet_id,
       food_id: feeding.food_id,
-      amount_put_out: feeding.amount_put_out.toString(),
-      amount_not_eaten: feeding.amount_not_eaten?.toString() || '',
-      amount_refilled: feeding.amount_refilled?.toString() || '',
+      current_bowl_weight: feeding.amount_put_out.toString(),
       fed_at: format(new Date(feeding.fed_at), "yyyy-MM-dd'T'HH:mm"),
       notes: feeding.notes || ''
     });
+    loadLastFeeding(feeding.pet_id, feeding.food_id);
     setShowForm(true);
   };
 
@@ -211,7 +235,13 @@ export default function Feeding() {
                 <label className="label">{t('feeding.pet')} *</label>
                 <select
                   value={formData.pet_id}
-                  onChange={(e) => setFormData({ ...formData, pet_id: e.target.value })}
+                  onChange={(e) => {
+                    const newPetId = e.target.value;
+                    setFormData({ ...formData, pet_id: newPetId });
+                    if (newPetId && formData.food_id) {
+                      loadLastFeeding(newPetId, formData.food_id);
+                    }
+                  }}
                   className="input"
                   required
                 >
@@ -228,7 +258,13 @@ export default function Feeding() {
                 <label className="label">{t('feeding.food')} *</label>
                 <select
                   value={formData.food_id}
-                  onChange={(e) => setFormData({ ...formData, food_id: e.target.value })}
+                  onChange={(e) => {
+                    const newFoodId = e.target.value;
+                    setFormData({ ...formData, food_id: newFoodId });
+                    if (formData.pet_id && newFoodId) {
+                      loadLastFeeding(formData.pet_id, newFoodId);
+                    }
+                  }}
                   className="input"
                   required
                 >
@@ -241,39 +277,42 @@ export default function Feeding() {
                 </select>
               </div>
 
+              {lastFeeding && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm font-medium text-blue-900 mb-1">
+                    {t('feeding.lastFeedingInfo')}
+                  </p>
+                  <p className="text-sm text-blue-700">
+                    {t('feeding.lastBowlWeight')}: {formatNumber(lastFeeding.amount_put_out)}{t('common.grams')}
+                  </p>
+                  <p className="text-sm text-blue-600">
+                    {formatDateTime(lastFeeding.fed_at)}
+                  </p>
+                </div>
+              )}
+
               <div>
-                <label className="label">{t('feeding.amountPutOut')} *</label>
+                <label className="label">{t('feeding.currentBowlWeight')} *</label>
                 <input
                   type="number"
                   step="0.1"
-                  value={formData.amount_put_out}
-                  onChange={(e) => setFormData({ ...formData, amount_put_out: e.target.value })}
+                  value={formData.current_bowl_weight}
+                  onChange={(e) => setFormData({ ...formData, current_bowl_weight: e.target.value })}
                   className="input"
                   required
                 />
               </div>
 
-              <div>
-                <label className="label">{t('feeding.amountNotEaten')}</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={formData.amount_not_eaten}
-                  onChange={(e) => setFormData({ ...formData, amount_not_eaten: e.target.value })}
-                  className="input"
-                />
-              </div>
-
-              <div>
-                <label className="label">{t('feeding.amountRefilled')}</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={formData.amount_refilled}
-                  onChange={(e) => setFormData({ ...formData, amount_refilled: e.target.value })}
-                  className="input"
-                />
-              </div>
+              {lastFeeding && formData.current_bowl_weight && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <p className="text-sm font-medium text-green-900 mb-1">
+                    {t('feeding.calculatedConsumption')}
+                  </p>
+                  <p className="text-sm text-green-700">
+                    {formatNumber(calculateActualConsumed(parseNumber(formData.current_bowl_weight), lastFeeding.amount_put_out))}{t('common.grams')}
+                  </p>
+                </div>
+              )}
 
               <div>
                 <label className="label">{t('feeding.fedAt')}</label>
@@ -304,12 +343,11 @@ export default function Feeding() {
                   onClick={() => {
                     setShowForm(false);
                     setEditingFeeding(null);
+                    setLastFeeding(null);
                     setFormData({
                       pet_id: '',
                       food_id: '',
-                      amount_put_out: '',
-                      amount_not_eaten: '',
-                      amount_refilled: '',
+                      current_bowl_weight: '',
                       fed_at: '',
                       notes: ''
                     });
@@ -348,21 +386,9 @@ export default function Feeding() {
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
-                      <span className="font-medium text-gray-700">{t('feeding.putOut')}:</span>
+                      <span className="font-medium text-gray-700">{t('feeding.bowlWeight')}:</span>
                       <p className="text-gray-900">{formatNumber(feeding.amount_put_out)}{t('common.grams')}</p>
                     </div>
-                    {feeding.amount_not_eaten && (
-                      <div>
-                        <span className="font-medium text-gray-700">{t('feeding.notEaten')}:</span>
-                        <p className="text-gray-900">{formatNumber(feeding.amount_not_eaten)}{t('common.grams')}</p>
-                      </div>
-                    )}
-                    {feeding.amount_refilled && (
-                      <div>
-                        <span className="font-medium text-gray-700">{t('feeding.refilled')}:</span>
-                        <p className="text-gray-900">{formatNumber(feeding.amount_refilled)}{t('common.grams')}</p>
-                      </div>
-                    )}
                     <div>
                       <span className="font-medium text-gray-700">{t('feeding.consumed')}:</span>
                       <p className="text-green-600 font-semibold">{formatNumber(feeding.actual_consumed || 0)}{t('common.grams')}</p>

@@ -1,418 +1,453 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../hooks/useAuth';
+import { useLanguage } from '../contexts/LanguageContext';
+import { Pet, Food, FeedingEntry } from '../types';
+import { Plus, Edit2, Trash2, PlusCircle } from 'lucide-react';
+import { format } from 'date-fns';
 
-export type Language = 'en' | 'de';
-
-interface LanguageContextType {
-  language: Language;
-  setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
-  formatNumber: (num: number, decimals?: number) => string;
-  formatDateTime: (date: Date | string) => string;
-  formatDate: (date: Date | string) => string;
-  parseNumber: (value: string) => number;
-}
-
-const translations = {
-  en: {
-    // Navigation
-    'nav.dashboard': 'Dashboard',
-    'nav.pets': 'Pets',
-    'nav.foods': 'Foods',
-    'nav.feeding': 'Feeding',
-    'nav.analytics': 'Analytics',
-    'nav.signOut': 'Sign Out',
-    
-    // Auth
-    'auth.title': 'Pet Tracker',
-    'auth.subtitle': 'Sign in to your account',
-    'auth.continueWithGoogle': 'Continue with Google',
-    'auth.mockLogin': 'Mock Login (Dev Only)',
-    'auth.signingIn': 'Signing in...',
-    'auth.loggingIn': 'Logging in...',
-    'auth.terms': 'By signing in, you agree to our terms of service and privacy policy.',
-    'auth.devInfo1': 'Use "Mock Login" for development in Bolt preview',
-    'auth.devInfo2': 'Use "Google" for testing in separate tab',
-    
-    // Dashboard
-    'dashboard.title': 'Dashboard',
-    'dashboard.subtitle': 'Overview of your pets\' health and feeding',
-    'dashboard.totalPets': 'Total Pets',
-    'dashboard.todayFeedings': 'Today\'s Feedings',
-    'dashboard.todayCalories': 'Today\'s Calories',
-    'dashboard.weightTrend': 'Weight Trend',
-    'dashboard.recentFeedings': 'Recent Feedings',
-    'dashboard.weightTrends': 'Weight Trends',
-    'dashboard.noRecentFeedings': 'No recent feedings',
-    'dashboard.noWeightData': 'No weight data available',
-    
-    // Pets
-    'pets.title': 'My Pets',
-    'pets.subtitle': 'Manage your pets and their information',
-    'pets.addPet': 'Add Pet',
-    'pets.editPet': 'Edit Pet',
-    'pets.addNewPet': 'Add New Pet',
-    'pets.noPets': 'No pets',
-    'pets.noPetsDescription': 'Get started by adding your first pet.',
-    'pets.name': 'Name',
-    'pets.species': 'Species',
-    'pets.breed': 'Breed',
-    'pets.birthDate': 'Birth Date',
-    'pets.targetWeight': 'Target Weight (kg)',
-    'pets.age': 'Age',
-    'pets.target': 'Target',
-    'pets.update': 'Update',
-    'pets.add': 'Add',
-    'pets.cancel': 'Cancel',
-    'pets.deleteConfirm': 'Are you sure you want to delete this pet? This will also delete all associated feeding and weight records.',
-    
-    // Species
-    'species.dog': 'Dog',
-    'species.cat': 'Cat',
-    'species.bird': 'Bird',
-    'species.rabbit': 'Rabbit',
-    'species.other': 'Other',
-    
-    // Foods
-    'foods.title': 'Food Database',
-    'foods.subtitle': 'Manage your pet foods and their nutritional information',
-    'foods.addFood': 'Add Food',
-    'foods.editFood': 'Edit Food',
-    'foods.addNewFood': 'Add New Food',
-    'foods.noFoods': 'No foods',
-    'foods.noFoodsDescription': 'Get started by adding your first food.',
-    'foods.foodName': 'Food Name',
-    'foods.brand': 'Brand',
-    'foods.caloriesPerGram': 'Calories per gram',
-    'foods.proteinPerGram': 'Protein per gram',
-    'foods.fatPerGram': 'Fat per gram',
-    'foods.carbsPerGram': 'Carbs per gram',
-    'foods.calories': 'Calories',
-    'foods.protein': 'Protein',
-    'foods.fat': 'Fat',
-    'foods.carbs': 'Carbs',
-    'foods.update': 'Update',
-    'foods.add': 'Add',
-    'foods.cancel': 'Cancel',
-    'foods.deleteConfirm': 'Are you sure you want to delete this food? This will also delete all associated feeding records.',
-    
-    // Feeding
-    'feeding.title': 'Feeding Records',
-    'feeding.subtitle': 'Track your pets\' food intake and calculate consumption',
-    'feeding.addFeeding': 'Add Feeding',
-    'feeding.editFeeding': 'Edit Feeding',
-    'feeding.addNewFeeding': 'Add New Feeding',
-    'feeding.noFeedings': 'No feeding records',
-    'feeding.noFeedingsDescription': 'Start tracking your pets\' food intake.',
-    'feeding.setupRequired': 'Setup Required',
-    'feeding.setupDescription': 'You need to add at least one pet and one food before recording feedings.',
-    'feeding.pet': 'Pet',
-    'feeding.food': 'Food',
-    'feeding.amountPutOut': 'Amount Put Out (grams)',
-    'feeding.amountNotEaten': 'Amount Not Eaten (grams)',
-    'feeding.amountRefilled': 'Amount Refilled (grams)',
-    'feeding.fedAt': 'Fed At',
-    'feeding.notes': 'Notes',
-    'feeding.putOut': 'Put Out',
-    'feeding.notEaten': 'Not Eaten',
-    'feeding.refilled': 'Refilled',
-    'feeding.consumed': 'Consumed',
-    'feeding.calories': 'Calories',
-    'feeding.update': 'Update',
-    'feeding.add': 'Add',
-    'feeding.cancel': 'Cancel',
-    'feeding.deleteConfirm': 'Are you sure you want to delete this feeding record?',
-    'feeding.selectPet': 'Select a pet',
-    'feeding.selectFood': 'Select a food',
-    
-    // Analytics
-    'analytics.title': 'Analytics',
-    'analytics.subtitle': 'Track your pets\' weight trends and feeding patterns',
-    'analytics.pet': 'Pet',
-    'analytics.timeRange': 'Time Range',
-    'analytics.allPets': 'All Pets',
-    'analytics.lastWeek': 'Last Week',
-    'analytics.lastMonth': 'Last Month',
-    'analytics.last3Months': 'Last 3 Months',
-    'analytics.weightTrends': 'Weight Trends',
-    'analytics.dailyCalories': 'Daily Calories',
-    'analytics.foodDistribution': 'Food Distribution',
-    'analytics.noPetsFound': 'No pets found',
-    'analytics.noPetsDescription': 'Add some pets to see analytics.',
-    'analytics.noWeightData': 'No weight data available',
-    'analytics.noCalorieData': 'No calorie data available',
-    'analytics.noFeedingData': 'No feeding data available',
-    'analytics.weight': 'Weight',
-    'analytics.date': 'Date',
-    'analytics.amount': 'Amount',
-    
-    // Common
-    'common.loading': 'Loading...',
-    'common.required': 'required',
-    'common.optional': 'optional',
-    'common.save': 'Save',
-    'common.delete': 'Delete',
-    'common.edit': 'Edit',
-    'common.close': 'Close',
-    'common.confirm': 'Confirm',
-    'common.grams': 'g',
-    'common.kg': 'kg',
-    'common.cal': 'cal',
-    'common.months': 'months',
-    'common.month': 'month',
-    'common.years': 'years',
-    'common.year': 'year',
-    'dashboard.addWeight': 'Add Weight',
-    'dashboard.addFeeding': 'Add Feeding',
-    'dashboard.addWeightFor': 'Add Weight for',
-    'dashboard.addFeedingFor': 'Add Feeding for',
-    'dashboard.weighedAt': 'Weighed At',
-    'dashboard.weightKg': 'Weight (kg)',
-    'dashboard.optionalNotes': 'Optional notes about the weighing...',
-  },
-  de: {
-    // Navigation
-    'nav.dashboard': 'Dashboard',
-    'nav.pets': 'Haustiere',
-    'nav.foods': 'Futter',
-    'nav.feeding': 'Fütterung',
-    'nav.analytics': 'Analysen',
-    'nav.signOut': 'Abmelden',
-    
-    // Auth
-    'auth.title': 'Haustier Tracker',
-    'auth.subtitle': 'Melden Sie sich in Ihrem Konto an',
-    'auth.continueWithGoogle': 'Mit Google fortfahren',
-    'auth.mockLogin': 'Mock Login (Nur Entwicklung)',
-    'auth.signingIn': 'Anmeldung läuft...',
-    'auth.loggingIn': 'Anmeldung läuft...',
-    'auth.terms': 'Mit der Anmeldung stimmen Sie unseren Nutzungsbedingungen und Datenschutzrichtlinien zu.',
-    'auth.devInfo1': 'Verwenden Sie "Mock Login" für die Entwicklung in der Bolt-Vorschau',
-    'auth.devInfo2': 'Verwenden Sie "Google" zum Testen in einem separaten Tab',
-    
-    // Dashboard
-    'dashboard.title': 'Dashboard',
-    'dashboard.subtitle': 'Überblick über die Gesundheit und Fütterung Ihrer Haustiere',
-    'dashboard.totalPets': 'Haustiere Gesamt',
-    'dashboard.todayFeedings': 'Heutige Fütterungen',
-    'dashboard.todayCalories': 'Heutige Kalorien',
-    'dashboard.weightTrend': 'Gewichtstrend',
-    'dashboard.recentFeedings': 'Letzte Fütterungen',
-    'dashboard.weightTrends': 'Gewichtstrends',
-    'dashboard.noRecentFeedings': 'Keine aktuellen Fütterungen',
-    'dashboard.noWeightData': 'Keine Gewichtsdaten verfügbar',
-    
-    // Pets
-    'pets.title': 'Meine Haustiere',
-    'pets.subtitle': 'Verwalten Sie Ihre Haustiere und deren Informationen',
-    'pets.addPet': 'Haustier hinzufügen',
-    'pets.editPet': 'Haustier bearbeiten',
-    'pets.addNewPet': 'Neues Haustier hinzufügen',
-    'pets.noPets': 'Keine Haustiere',
-    'pets.noPetsDescription': 'Beginnen Sie, indem Sie Ihr erstes Haustier hinzufügen.',
-    'pets.name': 'Name',
-    'pets.species': 'Art',
-    'pets.breed': 'Rasse',
-    'pets.birthDate': 'Geburtsdatum',
-    'pets.targetWeight': 'Zielgewicht (kg)',
-    'pets.age': 'Alter',
-    'pets.target': 'Ziel',
-    'pets.update': 'Aktualisieren',
-    'pets.add': 'Hinzufügen',
-    'pets.cancel': 'Abbrechen',
-    'pets.deleteConfirm': 'Sind Sie sicher, dass Sie dieses Haustier löschen möchten? Dies löscht auch alle zugehörigen Fütterungs- und Gewichtsaufzeichnungen.',
-    
-    // Species
-    'species.dog': 'Hund',
-    'species.cat': 'Katze',
-    'species.bird': 'Vogel',
-    'species.rabbit': 'Kaninchen',
-    'species.other': 'Andere',
-    
-    // Foods
-    'foods.title': 'Futter-Datenbank',
-    'foods.subtitle': 'Verwalten Sie Ihre Haustierfutter und deren Nährwertinformationen',
-    'foods.addFood': 'Futter hinzufügen',
-    'foods.editFood': 'Futter bearbeiten',
-    'foods.addNewFood': 'Neues Futter hinzufügen',
-    'foods.noFoods': 'Kein Futter',
-    'foods.noFoodsDescription': 'Beginnen Sie, indem Sie Ihr erstes Futter hinzufügen.',
-    'foods.foodName': 'Futtername',
-    'foods.brand': 'Marke',
-    'foods.caloriesPerGram': 'Kalorien pro Gramm',
-    'foods.proteinPerGram': 'Protein pro Gramm',
-    'foods.fatPerGram': 'Fett pro Gramm',
-    'foods.carbsPerGram': 'Kohlenhydrate pro Gramm',
-    'foods.calories': 'Kalorien',
-    'foods.protein': 'Protein',
-    'foods.fat': 'Fett',
-    'foods.carbs': 'Kohlenhydrate',
-    'foods.update': 'Aktualisieren',
-    'foods.add': 'Hinzufügen',
-    'foods.cancel': 'Abbrechen',
-    'foods.deleteConfirm': 'Sind Sie sicher, dass Sie dieses Futter löschen möchten? Dies löscht auch alle zugehörigen Fütterungsaufzeichnungen.',
-    
-    // Feeding
-    'feeding.title': 'Fütterungsaufzeichnungen',
-    'feeding.subtitle': 'Verfolgen Sie die Nahrungsaufnahme Ihrer Haustiere und berechnen Sie den Verbrauch',
-    'feeding.addFeeding': 'Fütterung hinzufügen',
-    'feeding.editFeeding': 'Fütterung bearbeiten',
-    'feeding.addNewFeeding': 'Neue Fütterung hinzufügen',
-    'feeding.noFeedings': 'Keine Fütterungsaufzeichnungen',
-    'feeding.noFeedingsDescription': 'Beginnen Sie mit der Verfolgung der Nahrungsaufnahme Ihrer Haustiere.',
-    'feeding.setupRequired': 'Einrichtung erforderlich',
-    'feeding.setupDescription': 'Sie müssen mindestens ein Haustier und ein Futter hinzufügen, bevor Sie Fütterungen aufzeichnen können.',
-    'feeding.pet': 'Haustier',
-    'feeding.food': 'Futter',
-    'feeding.amountPutOut': 'Ausgegebene Menge (Gramm)',
-    'feeding.amountNotEaten': 'Nicht gegessene Menge (Gramm)',
-    'feeding.amountRefilled': 'Nachgefüllte Menge (Gramm)',
-    'feeding.fedAt': 'Gefüttert um',
-    'feeding.notes': 'Notizen',
-    'feeding.putOut': 'Ausgegeben',
-    'feeding.notEaten': 'Nicht gegessen',
-    'feeding.refilled': 'Nachgefüllt',
-    'feeding.consumed': 'Verbraucht',
-    'feeding.calories': 'Kalorien',
-    'feeding.update': 'Aktualisieren',
-    'feeding.add': 'Hinzufügen',
-    'feeding.cancel': 'Abbrechen',
-    'feeding.deleteConfirm': 'Sind Sie sicher, dass Sie diese Fütterungsaufzeichnung löschen möchten?',
-    'feeding.selectPet': 'Haustier auswählen',
-    'feeding.selectFood': 'Futter auswählen',
-    
-    // Analytics
-    'analytics.title': 'Analysen',
-    'analytics.subtitle': 'Verfolgen Sie die Gewichtstrends und Fütterungsmuster Ihrer Haustiere',
-    'analytics.pet': 'Haustier',
-    'analytics.timeRange': 'Zeitraum',
-    'analytics.allPets': 'Alle Haustiere',
-    'analytics.lastWeek': 'Letzte Woche',
-    'analytics.lastMonth': 'Letzter Monat',
-    'analytics.last3Months': 'Letzte 3 Monate',
-    'analytics.weightTrends': 'Gewichtstrends',
-    'analytics.dailyCalories': 'Tägliche Kalorien',
-    'analytics.foodDistribution': 'Futterverteilung',
-    'analytics.noPetsFound': 'Keine Haustiere gefunden',
-    'analytics.noPetsDescription': 'Fügen Sie einige Haustiere hinzu, um Analysen zu sehen.',
-    'analytics.noWeightData': 'Keine Gewichtsdaten verfügbar',
-    'analytics.noCalorieData': 'Keine Kaloriendaten verfügbar',
-    'analytics.noFeedingData': 'Keine Fütterungsdaten verfügbar',
-    'analytics.weight': 'Gewicht',
-    'analytics.date': 'Datum',
-    'analytics.amount': 'Menge',
-    
-    // Common
-    'common.loading': 'Lädt...',
-    'common.required': 'erforderlich',
-    'common.optional': 'optional',
-    'common.save': 'Speichern',
-    'common.delete': 'Löschen',
-    'common.edit': 'Bearbeiten',
-    'common.close': 'Schließen',
-    'common.confirm': 'Bestätigen',
-    'common.grams': 'g',
-    'common.kg': 'kg',
-    'common.cal': 'kal',
-    'common.months': 'Monate',
-    'common.month': 'Monat',
-    'common.years': 'Jahre',
-    'common.year': 'Jahr',
-    'dashboard.addWeight': 'Gewicht hinzufügen',
-    'dashboard.addFeeding': 'Fütterung hinzufügen',
-    'dashboard.addWeightFor': 'Gewicht hinzufügen für',
-    'dashboard.addFeedingFor': 'Fütterung hinzufügen für',
-    'dashboard.weighedAt': 'Gewogen am',
-    'dashboard.weightKg': 'Gewicht (kg)',
-    'dashboard.optionalNotes': 'Optionale Notizen zum Wiegen...',
-  }
-};
-
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
-
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>(() => {
-    const saved = localStorage.getItem('pet-tracker-language');
-    return (saved as Language) || 'en';
+export default function Feeding() {
+  const { user } = useAuth();
+  const { t, formatNumber, formatDateTime } = useLanguage();
+  const [pets, setPets] = useState<Pet[]>([]);
+  const [foods, setFoods] = useState<Food[]>([]);
+  const [feedings, setFeedings] = useState<FeedingEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingFeeding, setEditingFeeding] = useState<FeedingEntry | null>(null);
+  const [lastFeeding, setLastFeeding] = useState<FeedingEntry | null>(null);
+  const [lastFeeding, setLastFeeding] = useState<FeedingEntry | null>(null);
+  const [formData, setFormData] = useState({
+    pet_id: '',
+    food_id: '',
+    current_bowl_weight: '',
   });
 
   useEffect(() => {
-    localStorage.setItem('pet-tracker-language', language);
-  }, [language]);
+    if (user) {
+      loadData();
+    }
+  }, [user]);
 
-  const t = (key: string): string => {
-    return translations[language][key] || key;
+  const loadData = async () => {
+    try {
+      // Load pets
+      const { data: petsData } = await supabase
+        .from('pets')
+        .select('*')
+        .eq('user_id', user!.id)
+        .order('name');
+
+      // Load foods
+      const { data: foodsData } = await supabase
+        .from('foods')
+        .select('*')
+        .eq('user_id', user!.id)
+        .order('name');
+
+      // Load feeding entries
+      const { data: feedingsData } = await supabase
+        .from('feeding_entries')
+        .select(`
+          *,
+          pet:pets(*),
+          food:foods(*)
+        `)
+        .eq('user_id', user!.id)
+        .order('fed_at', { ascending: false });
+
+      setPets(petsData || []);
+      setFoods(foodsData || []);
+      setFeedings(feedingsData || []);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const formatNumber = (num: number, decimals: number = 1): string => {
-    const formatted = num.toFixed(decimals);
-    return language === 'de' ? formatted.replace('.', ',') : formatted;
+  const loadLastFeeding = async (petId: string, foodId: string) => {
+    if (!petId || !foodId) {
+      setLastFeeding(null);
+      return;
+    }
+
+    try {
+      const { data } = await supabase
+        .from('feeding_entries')
+        .select(`
+          *,
+          pet:pets(*),
+          food:foods(*)
+        `)
+        .eq('user_id', user!.id)
+        .eq('pet_id', petId)
+        .eq('food_id', foodId)
+        .order('fed_at', { ascending: false })
+        .limit(1);
+
+      setLastFeeding(data && data.length > 0 ? data[0] : null);
+    } catch (error) {
+      console.error('Error loading last feeding:', error);
+      setLastFeeding(null);
+      return;
+    }
+
+    try {
+      const { data } = await supabase
+        .from('feeding_entries')
+        .select(`
+          *,
+          pet:pets(*),
+          food:foods(*)
+        `)
+        .eq('user_id', user!.id)
+        .eq('pet_id', petId)
+        .eq('food_id', foodId)
+        .order('fed_at', { ascending: false })
+        .limit(1);
+
+      setLastFeeding(data && data.length > 0 ? data[0] : null);
+    } catch (error) {
+      console.error('Error loading last feeding:', error);
+      setLastFeeding(null);
+    }
   };
 
-  const formatDateTime = (date: Date | string): string => {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    if (language === 'de') {
-      return dateObj.toLocaleString('de-DE', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
+  const calculateActualConsumed = (currentBowlWeight: number, lastBowlWeight: number = 0) => {
+    // Bowl weights cancel out, so we just calculate the difference in food weight
+    return Math.max(0, lastBowlWeight - currentBowlWeight);
+  };
+
+  const calculateCalories = (actualConsumed: number, food: Food) => {
+    if (!food.calories_per_gram) return null;
+    return actualConsumed * food.calories_per_gram;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const currentBowlWeight = parseNumber(formData.current_bowl_weight);
+      const lastBowlWeight = lastFeeding?.amount_put_out || 0;
+      const actualConsumed = calculateActualConsumed(currentBowlWeight, lastBowlWeight);
+      
+      const selectedFood = foods.find(f => f.id === formData.food_id);
+      const caloriesConsumed = selectedFood ? calculateCalories(actualConsumed, selectedFood) : null;
+
+      const feedingData = {
+        pet_id: formData.pet_id,
+        food_id: formData.food_id,
+        amount_put_out: currentBowlWeight,
+        amount_not_eaten: null,
+        amount_refilled: null,
+        actual_consumed: actualConsumed,
+        calories_consumed: caloriesConsumed,
+        fed_at: formData.fed_at || new Date().toISOString(),
+        notes: formData.notes || null,
+        user_id: user!.id
+      };
+
+      if (editingFeeding) {
+        const { error } = await supabase
+          .from('feeding_entries')
+          .update(feedingData)
+          .eq('id', editingFeeding.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('feeding_entries')
+          .insert([feedingData]);
+        if (error) throw error;
+      }
+
+      setShowForm(false);
+      setEditingFeeding(null);
+      setLastFeeding(null);
+      setFormData({
+        pet_id: '',
+        food_id: '',
+        current_bowl_weight: '',
+        fed_at: '',
+        notes: ''
       });
+      loadData();
+    } catch (error) {
+      console.error('Error saving feeding:', error);
     }
-    return dateObj.toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
   };
 
-  const formatDate = (date: Date | string): string => {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    if (language === 'de') {
-      return dateObj.toLocaleDateString('de-DE', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
-    }
-    return dateObj.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+  const handleEdit = (feeding: FeedingEntry) => {
+    setEditingFeeding(feeding);
+    setFormData({
+      pet_id: feeding.pet_id,
+      food_id: feeding.food_id,
+      current_bowl_weight: feeding.amount_put_out.toString(),
+      fed_at: format(new Date(feeding.fed_at), "yyyy-MM-dd'T'HH:mm"),
+      notes: feeding.notes || ''
     });
+    loadLastFeeding(feeding.pet_id, feeding.food_id);
+    setShowForm(true);
   };
 
-  const parseNumber = (value: string): number => {
-    if (language === 'de') {
-      // Replace comma with dot for parsing
-      return parseFloat(value.replace(',', '.'));
+  const handleDelete = async (feedingId: string) => {
+    if (!confirm(t('feeding.deleteConfirm'))) {
+      return;
     }
-    return parseFloat(value);
+
+    try {
+      const { error } = await supabase
+        .from('feeding_entries')
+        .delete()
+        .eq('id', feedingId);
+      
+      if (error) throw error;
+      loadData();
+    } catch (error) {
+      console.error('Error deleting feeding:', error);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
 
   return (
-    <LanguageContext.Provider value={{ 
-      language, 
-      setLanguage, 
-      t, 
-      formatNumber, 
-      formatDateTime, 
-      formatDate, 
-      parseNumber 
-    }}>
-      {children}
-    </LanguageContext.Provider>
-  );
-}
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">{t('feeding.title')}</h1>
+          <p className="text-gray-600">{t('feeding.subtitle')}</p>
+        </div>
+        <button
+          onClick={() => setShowForm(true)}
+          className="btn-primary flex items-center"
+          disabled={pets.length === 0 || foods.length === 0}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          {t('feeding.addFeeding')}
+        </button>
+      </div>
 
-export function useLanguage() {
-  const context = useContext(LanguageContext);
-  if (context === undefined) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
-  }
-  return context;
+      {pets.length === 0 || foods.length === 0 ? (
+        <div className="text-center py-12">
+          <PlusCircle className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-2 text-sm font-medium text-gray-900">{t('feeding.setupRequired')}</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            {t('feeding.setupDescription')}
+          </p>
+        </div>
+      ) : null}
+
+      {/* Feeding Form Modal */}
+      {showForm && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              {editingFeeding ? t('feeding.editFeeding') : t('feeding.addNewFeeding')}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="label">{t('feeding.pet')} *</label>
+                <select
+                  value={formData.pet_id}
+                  onChange={(e) => {
+                    const newPetId = e.target.value;
+                    setFormData({ ...formData, pet_id: newPetId });
+                    if (newPetId && formData.food_id) {
+                      loadLastFeeding(newPetId, formData.food_id);
+                    }
+                  }}
+                  className="input"
+                  required
+                >
+                  <option value="">{t('feeding.selectPet')}</option>
+                  {pets.map((pet) => (
+                    <option key={pet.id} value={pet.id}>
+                      {pet.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="label">{t('feeding.food')} *</label>
+                <select
+                  value={formData.food_id}
+                  onChange={(e) => {
+                    const newFoodId = e.target.value;
+                    setFormData({ ...formData, food_id: newFoodId });
+                    if (formData.pet_id && newFoodId) {
+                      loadLastFeeding(formData.pet_id, newFoodId);
+                    }
+                  }}
+                  className="input"
+                  required
+                >
+                  <option value="">{t('feeding.selectFood')}</option>
+                  {foods.map((food) => (
+                    <option key={food.id} value={food.id}>
+                      {food.name} {food.brand && `(${food.brand})`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {lastFeeding && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm font-medium text-blue-900 mb-1">
+                    {t('feeding.lastFeedingInfo')}
+                  </p>
+                  <p className="text-sm text-blue-700">
+                    {t('feeding.lastBowlWeight')}: {formatNumber(lastFeeding.amount_put_out)}{t('common.grams')}
+                  </p>
+                  <p className="text-sm text-blue-600">
+                    {formatDateTime(lastFeeding.fed_at)}
+                  </p>
+                </div>
+              )}
+
+              <div>
+                <label className="label">{t('feeding.currentBowlWeight')} *</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.current_bowl_weight}
+                  onChange={(e) => setFormData({ ...formData, current_bowl_weight: e.target.value })}
+                  className="input"
+                  required
+                />
+              </div>
+
+              {lastFeeding && formData.current_bowl_weight && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <p className="text-sm font-medium text-green-900 mb-1">
+                    {t('feeding.calculatedConsumption')}
+                  </p>
+                  <p className="text-sm text-green-700">
+                    {formatNumber(calculateActualConsumed(parseNumber(formData.current_bowl_weight), lastFeeding.amount_put_out))}{t('common.grams')}
+                  </p>
+                </div>
+              )}
+
+              <div>
+                <label className="label">{t('feeding.fedAt')}</label>
+                <input
+                  type="datetime-local"
+                  value={formData.fed_at}
+                  onChange={(e) => setFormData({ ...formData, fed_at: e.target.value })}
+                  className="input"
+                />
+              </div>
+
+              <div>
+                <label className="label">{t('feeding.notes')}</label>
+                <textarea
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  className="input"
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button type="submit" className="btn-primary flex-1">
+                  {editingFeeding ? t('feeding.update') : t('feeding.add')} {t('feeding.title')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForm(false);
+                    setEditingFeeding(null);
+                    setLastFeeding(null);
+                    setFormData({
+                      pet_id: '',
+                      food_id: '',
+                      current_bowl_weight: '',
+                      fed_at: '',
+                      notes: ''
+                    });
+                  }}
+                  className="btn-secondary flex-1"
+                >
+                  {t('feeding.cancel')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Feeding Records */}
+      {feedings.length === 0 ? (
+        <div className="text-center py-12">
+          <PlusCircle className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-2 text-sm font-medium text-gray-900">{t('feeding.noFeedings')}</h3>
+          <p className="mt-1 text-sm text-gray-500">{t('feeding.noFeedingsDescription')}</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {feedings.map((feeding) => (
+            <div key={feeding.id} className="card">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-4 mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900">{feeding.pet?.name}</h3>
+                    <span className="text-sm text-gray-500">
+                      {formatDateTime(feeding.fed_at)}
+                    </span>
+                  </div>
+                  
+                  <p className="text-sm text-gray-600 mb-2">{feeding.food?.name}</p>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-700">{t('feeding.bowlWeight')}:</span>
+                      <p className="text-gray-900">{formatNumber(feeding.amount_put_out)}{t('common.grams')}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">{t('feeding.consumed')}:</span>
+                      <p className="text-green-600 font-semibold">{formatNumber(feeding.actual_consumed || 0)}{t('common.grams')}</p>
+                    </div>
+                  </div>
+
+                  {feeding.calories_consumed && (
+                    <div className="mt-2">
+                      <span className="text-sm font-medium text-gray-700">{t('feeding.calories')}: </span>
+                      <span className="text-sm text-orange-600 font-semibold">
+                        {formatNumber(feeding.calories_consumed, 0)} {t('common.cal')}
+                      </span>
+                    </div>
+                  )}
+
+                  {feeding.notes && (
+                    <p className="mt-2 text-sm text-gray-600 italic">{feeding.notes}</p>
+                  )}
+                </div>
+                
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleEdit(feeding)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(feeding.id)}
+                    className="text-gray-400 hover:text-red-600"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
