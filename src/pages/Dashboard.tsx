@@ -183,61 +183,10 @@ export default function Dashboard() {
         <p className="text-gray-600">{t('dashboard.subtitle')}</p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="card">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <Heart className="h-8 w-8 text-primary-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">{t('dashboard.totalPets')}</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.totalPets}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <Utensils className="h-8 w-8 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">{t('dashboard.todayFeedings')}</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.todayFeedings}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <TrendingUp className="h-8 w-8 text-orange-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">{t('dashboard.todayCalories')}</p>
-              <p className="text-2xl font-semibold text-gray-900">{formatNumber(stats.todayCalories, 0)}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <Scale className="h-8 w-8 text-blue-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">{t('dashboard.weightTrend')}</p>
-              <p className="text-2xl font-semibold text-gray-900 capitalize">{t(`dashboard.trend.${stats.recentWeightTrend}`)}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div>
         {/* Pet Cards with Action Buttons */}
         {pets.length === 0 ? (
-          <div className="lg:col-span-2 text-center py-12">
+          <div className="text-center py-12">
             <Heart className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">{t('pets.noPets')}</h3>
             <p className="mt-1 text-sm text-gray-500">{t('pets.noPetsDescription')}</p>
@@ -249,7 +198,7 @@ export default function Dashboard() {
             </div>
           </div>
         ) : (
-          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {pets.map((pet) => {
               const latestWeight = getLatestWeight(pet.id);
               
