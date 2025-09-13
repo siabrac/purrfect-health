@@ -6,18 +6,24 @@ export default function AuthForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Detect if we're in the bolt.new iframe or separate tab
+  const isInIframe = window !== window.top;
+  const currentUrl = window.location.origin;
+
   const handleGoogleSignIn = async (e: React.MouseEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     console.log('Attempting Google sign-in...');
+    console.log('Current URL:', currentUrl);
+    console.log('Is in iframe:', isInIframe);
 
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: currentUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
