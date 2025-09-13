@@ -25,7 +25,8 @@ export default function Pets() {
   });
   const [weightFormData, setWeightFormData] = useState({
     weight: '',
-    notes: ''
+    notes: '',
+    weighed_at: ''
   });
 
   useEffect(() => {
@@ -104,6 +105,16 @@ export default function Pets() {
     }
   };
 
+  const getCurrentDateTime = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
   const handleWeightSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -115,7 +126,7 @@ export default function Pets() {
         weight: parseFloat(weightFormData.weight),
         notes: weightFormData.notes || null,
         user_id: user!.id,
-        weighed_at: new Date().toISOString()
+        weighed_at: weightFormData.weighed_at ? new Date(weightFormData.weighed_at).toISOString() : new Date().toISOString()
       };
 
       const { error } = await supabase
@@ -126,7 +137,7 @@ export default function Pets() {
 
       setShowWeightForm(false);
       setSelectedPetForWeight(null);
-      setWeightFormData({ weight: '', notes: '' });
+      setWeightFormData({ weight: '', notes: '', weighed_at: '' });
       loadWeightEntries();
     } catch (error) {
       console.error('Error saving weight entry:', error);
@@ -135,6 +146,11 @@ export default function Pets() {
 
   const handleAddWeight = (pet: Pet) => {
     setSelectedPetForWeight(pet);
+    setWeightFormData({ 
+      weight: '', 
+      notes: '', 
+      weighed_at: getCurrentDateTime() 
+    });
     setShowWeightForm(true);
   };
 
@@ -315,6 +331,17 @@ export default function Pets() {
               </div>
 
               <div>
+                <label className="label">Weighed At</label>
+                <input
+                  type="datetime-local"
+                  value={weightFormData.weighed_at}
+                  onChange={(e) => setWeightFormData({ ...weightFormData, weighed_at: e.target.value })}
+                  className="input"
+                  required
+                />
+              </div>
+
+              <div>
                 <label className="label">{t('feeding.notes')}</label>
                 <textarea
                   value={weightFormData.notes}
@@ -334,7 +361,7 @@ export default function Pets() {
                   onClick={() => {
                     setShowWeightForm(false);
                     setSelectedPetForWeight(null);
-                    setWeightFormData({ weight: '', notes: '' });
+                    setWeightFormData({ weight: '', notes: '', weighed_at: '' });
                   }}
                   className="btn-secondary flex-1"
                 >

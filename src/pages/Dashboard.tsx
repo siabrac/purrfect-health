@@ -26,7 +26,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [weightFormData, setWeightFormData] = useState({
     weight: '',
-    notes: ''
+    notes: '',
+    weighed_at: ''
   });
   const [feedingFormData, setFeedingFormData] = useState({
     food_id: '',
@@ -145,6 +146,16 @@ export default function Dashboard() {
     }
   };
 
+  const getCurrentDateTime = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
   const handleWeightSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -156,7 +167,7 @@ export default function Dashboard() {
         weight: parseFloat(weightFormData.weight),
         notes: weightFormData.notes || null,
         user_id: user!.id,
-        weighed_at: new Date().toISOString()
+        weighed_at: weightFormData.weighed_at ? new Date(weightFormData.weighed_at).toISOString() : new Date().toISOString()
       };
 
       const { error } = await supabase
@@ -166,11 +177,21 @@ export default function Dashboard() {
       if (error) throw error;
 
       setShowWeightForm(false);
-      setWeightFormData({ weight: '', notes: '' });
+      setWeightFormData({ weight: '', notes: '', weighed_at: '' });
       loadDashboardData(); // Refresh data
     } catch (error) {
       console.error('Error saving weight entry:', error);
     }
+  };
+
+  const handleAddWeight = (pet: Pet) => {
+    setSelectedPetForWeight(pet);
+    setWeightFormData({ 
+      weight: '', 
+      notes: '', 
+      weighed_at: getCurrentDateTime() 
+    });
+    setShowWeightForm(true);
   };
 
   const calculateActualConsumed = (putOut: number, notEaten: number = 0, refilled: number = 0) => {
@@ -301,7 +322,7 @@ export default function Dashboard() {
             </div>
             <div className="flex space-x-2">
               <button
-                onClick={() => setShowWeightForm(true)}
+                onClick={() => handleAddWeight(selectedPet)}
                 className="flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Scale className="w-4 h-4 mr-1" />
@@ -340,6 +361,17 @@ export default function Dashboard() {
               </div>
 
               <div>
+                <label className="label">Weighed At</label>
+                <input
+                  type="datetime-local"
+                  value={weightFormData.weighed_at}
+                  onChange={(e) => setWeightFormData({ ...weightFormData, weighed_at: e.target.value })}
+                  className="input"
+                  required
+                />
+              </div>
+
+              <div>
                 <label className="label">{t('feeding.notes')}</label>
                 <textarea
                   value={weightFormData.notes}
@@ -358,7 +390,7 @@ export default function Dashboard() {
                   type="button"
                   onClick={() => {
                     setShowWeightForm(false);
-                    setWeightFormData({ weight: '', notes: '' });
+                    setWeightFormData({ weight: '', notes: '', weighed_at: '' });
                   }}
                   className="btn-secondary flex-1"
                 >
