@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import { supabase, supabaseAdmin } from '../lib/supabase';
 
 // Mock user for development
 const MOCK_USER = {
@@ -18,6 +18,7 @@ const MOCK_USER = {
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isMockUser, setIsMockUser] = useState(false);
 
   useEffect(() => {
     // Check for mock login in development
@@ -50,6 +51,11 @@ export function useAuth() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Get the appropriate Supabase client based on auth type
+  const getSupabaseClient = () => {
+    return isMockUser ? supabaseAdmin : supabase
+  }
+
   const mockLogin = () => {
     const mockUser = {
       id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
@@ -73,6 +79,7 @@ export function useAuth() {
     // Set the session in Supabase client
     supabase.auth.setSession(mockSession);
     setUser(mockUser);
+    setIsMockUser(true);
   };
 
   const signOut = async () => {
@@ -80,11 +87,14 @@ export function useAuth() {
     localStorage.removeItem('mock-auth');
     await supabase.auth.signOut();
     setUser(null);
+    setIsMockUser(false);
   };
 
   return {
     user,
     loading,
+    isMockUser,
+    supabaseClient: getSupabaseClient(),
     signOut,
   };
 }
