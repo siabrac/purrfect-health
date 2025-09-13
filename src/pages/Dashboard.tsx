@@ -4,11 +4,20 @@ import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Pet, FeedingEntry, WeightEntry, DashboardStats } from '../types';
 import { Heart, Scale, Utensils, TrendingUp, Calendar, Plus } from 'lucide-react';
-import { format, isToday, subDays } from 'date-fns';
+import { format, isToday, subDays, differenceInYears, differenceInMonths } from 'date-fns';
 
 export default function Dashboard() {
   const { user } = useAuth();
   const { t, formatNumber, formatDateTime } = useLanguage();
+  const [pets, setPets] = useState<Pet[]>([]);
+  const [allWeightEntries, setAllWeightEntries] = useState<WeightEntry[]>([]);
+  const [showWeightForm, setShowWeightForm] = useState(false);
+  const [selectedPetForWeight, setSelectedPetForWeight] = useState<Pet | null>(null);
+  const [weightFormData, setWeightFormData] = useState({
+    weight: '',
+    weighed_at: getCurrentDateTime(),
+    notes: ''
+  });
   const [stats, setStats] = useState<DashboardStats>({
     totalPets: 0,
     todayFeedings: 0,
@@ -18,6 +27,69 @@ export default function Dashboard() {
   const [recentFeedings, setRecentFeedings] = useState<FeedingEntry[]>([]);
   const [recentWeights, setRecentWeights] = useState<WeightEntry[]>([]);
   const [loading, setLoading] = useState(true);
+
+  function getCurrentDateTime() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+
+  const getLatestWeight = (petId: string) => {
+    return allWeightEntries
+      .filter(entry => entry.pet_id === petId)
+      .sort((a, b) => new Date(b.weighed_at).getTime() - new Date(a.weighed_at).getTime())[0];
+  };
+
+  const getAge = (birthDate: string) => {
+    const birth = new Date(birthDate);
+    const now = new Date();
+    const years = differenceInYears(now, birth);
+    const months = differenceInMonths(now, birth) % 12;
+    
+    if (years > 0) {
+      return `${years}y ${months}m`;
+    }
+    return `${months}m`;
+  };
+
+  const handleAddWeight = (pet: Pet) => {
+    setSelectedPetForWeight(pet);
+    setWeightFormData({
+      weight: '',
+      weighed_at: getCurrentDateTime(),
+      notes: ''
+    });
+    setShowWeightForm(true);
+  };
+
+  const handleWeightSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedPetForWeight || !weightFormData.weight) return;
+
+    try {
+      const { error } = await supabase
+        .from('weight_entries')
+        .insert({
+          user_id: user!.id,
+          pet_id: selectedPetForWeight.id,
+          weight: parseFloat(weightFormData.weight),
+          weighed_at: weightFormData.weighed_at,
+          notes: weightFormData.notes || null
+        });
+
+      if (error) throw error;
+
+      setShowWeightForm(false);
+      setSelectedPetForWeight(null);
+      loadDashboardData(); // Reload data
+    } catch (error) {
+      console.error('Error adding weight entry:', error);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -30,7 +102,13 @@ export default function Dashboard() {
       // Load pets count
       const { data: pets } = await supabase
         .from('pets')
-        .select('id')
+        .select('*')
+        .eq('user_id', user!.id);
+
+      // Load all weight entries
+      const { data: weightEntries } = await supabase
+        .from('weight_entries')
+        .select('*')
         .eq('user_id', user!.id);
 
       // Load today's feedings
@@ -81,6 +159,8 @@ export default function Dashboard() {
 
       setRecentFeedings(feedingsData || []);
       setRecentWeights(weightsData || []);
+      setPets(pets || []);
+      setAllWeightEntries(weightEntries || []);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
@@ -225,7 +305,68 @@ export default function Dashboard() {
             })}
           </div>
         )}
+      </div>
+
+      {/* Weight Entry Form Modal */}
+      {showWeightForm && selectedPetForWeight && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">
+              {t('weights.addWeight')} - {selectedPetForWeight.name}
+            </h3>
+            <form onSubmit={handleWeightSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t('weights.weight')} ({t('common.kg')})
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={weightFormData.weight}
+                  onChange={(e) => setWeightFormData(prev => ({ ...prev, weight: e.target.value }))}
+                  className="input"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t('weights.weighedAt')}
+                </label>
+                <input
+                  type="datetime-local"
+                  value={weightFormData.weighed_at}
+                  onChange={(e) => setWeightFormData(prev => ({ ...prev, weighed_at: e.target.value }))}
+                  className="input"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t('common.notes')}
+                </label>
+                <textarea
+                  value={weightFormData.notes}
+                  onChange={(e) => setWeightFormData(prev => ({ ...prev, notes: e.target.value }))}
+                  className="input"
+                  rows={3}
+                />
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowWeightForm(false)}
+                  className="btn-secondary flex-1"
+                >
+                  {t('common.cancel')}
+                </button>
+                <button type="submit" className="btn-primary flex-1">
+                  {t('common.save')}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
+      )}
     </div>
   );
 }
