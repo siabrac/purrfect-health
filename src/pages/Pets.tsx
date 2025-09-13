@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../contexts/LanguageContext';
+import { supabase } from '../lib/supabase';
 import { Pet } from '../types';
 import { Plus, Edit2, Trash2, Heart } from 'lucide-react';
 import { format, differenceInYears, differenceInMonths } from 'date-fns';
