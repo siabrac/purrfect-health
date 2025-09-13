@@ -261,10 +261,10 @@ export default function Analytics() {
           <div className="card lg:col-span-2">
             <div className="flex items-center mb-4">
               <Utensils className="w-5 h-5 text-green-600 mr-2" />
-            <h2 className="text-lg font-semibold text-gray-900">{t('analytics.foodDistribution')}</h2>
+              <h2 className="text-lg font-semibold text-gray-900">{t('analytics.foodDistribution')}</h2>
             </div>
             {foodDistribution.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No feeding data available</p>
+              <p className="text-gray-500 text-center py-8">{t('analytics.noFeedingData')}</p>
             ) : (
               <div className="flex flex-col lg:flex-row items-center">
                 <div className="h-64 w-full lg:w-1/2">
@@ -281,7 +281,6 @@ export default function Analytics() {
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value) => [`${value}g`, 'Amount']} />
                       <Tooltip formatter={(value) => [`${value}${t('common.grams')}`, t('analytics.amount')]} />
                     </PieChart>
                   </ResponsiveContainer>
@@ -297,7 +296,6 @@ export default function Analytics() {
                           />
                           <span className="text-sm text-gray-700">{food.name}</span>
                         </div>
-                        <span className="text-sm font-medium text-gray-900">{food.value}g</span>
                         <span className="text-sm font-medium text-gray-900">{food.value}{t('common.grams')}</span>
                       </div>
                     ))}
@@ -307,7 +305,7 @@ export default function Analytics() {
             )}
           </div>
         </div>
-            <p className="text-gray-500 text-center py-8">{t('analytics.noFeedingData')}</p>
+      )}
     </div>
   );
 }
