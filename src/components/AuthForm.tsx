@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Heart } from 'lucide-react';
+import { Heart, User } from 'lucide-react';
 
 export default function AuthForm() {
   const [loading, setLoading] = useState(false);
+  const [mockLoading, setMockLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Detect if we're in the bolt.new iframe or separate tab
@@ -45,6 +46,40 @@ export default function AuthForm() {
     // Don't set loading to false here as the redirect should happen
   };
 
+  const handleMockLogin = async () => {
+    setMockLoading(true);
+    setError(null);
+
+    try {
+      // Create a mock user session for development
+      const mockUser = {
+        id: 'mock-user-123',
+        email: 'demo@pettracker.com',
+        user_metadata: {
+          full_name: 'Demo User',
+          avatar_url: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop'
+        }
+      };
+
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // For development, we'll simulate a successful login
+      // In a real app, you'd never do this - this is just for development
+      console.log('Mock login successful:', mockUser);
+      
+      // Set mock auth flag
+      localStorage.setItem('mock-auth', 'true');
+      
+      // Force a page reload to trigger the auth state change
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Mock login error:', error);
+      setError('Mock login failed');
+    } finally {
+      setMockLoading(false);
+    }
+  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
@@ -101,6 +136,29 @@ export default function AuthForm() {
             )}
             {loading ? 'Signing in...' : 'Continue with Google'}
           </button>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">Development Only</span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleMockLogin}
+            disabled={mockLoading}
+            className="w-full flex items-center justify-center px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg shadow-sm bg-gray-50 text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+          >
+            {mockLoading ? (
+              <div className="w-5 h-5 mr-3 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600"></div>
+            ) : (
+              <User className="w-5 h-5 mr-3" />
+            )}
+            {mockLoading ? 'Logging in...' : 'Mock Login (Dev Only)'}
+          </button>
         </div>
 
         <div className="mt-6 text-center">
@@ -109,10 +167,13 @@ export default function AuthForm() {
           </p>
         </div>
         
-        {/* Debug info - remove in production */}
+        {/* Development info */}
         <div className="mt-4 text-center">
+          <p className="text-xs text-gray-400 mb-2">
+            Use "Mock Login" for development in Bolt preview
+          </p>
           <p className="text-xs text-gray-400">
-            Debug: Check browser console for sign-in logs
+            Use "Google" for testing in separate tab
           </p>
         </div>
       </div>
