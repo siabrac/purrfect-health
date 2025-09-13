@@ -16,7 +16,6 @@ export default function Feeding() {
   const [showForm, setShowForm] = useState(false);
   const [editingFeeding, setEditingFeeding] = useState<FeedingEntry | null>(null);
   const [lastFeeding, setLastFeeding] = useState<FeedingEntry | null>(null);
-  const [lastFeeding, setLastFeeding] = useState<FeedingEntry | null>(null);
   const [formData, setFormData] = useState({
     pet_id: '',
     food_id: '',
