@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Pet, Food, FeedingEntry } from '../types';
 import { Plus, Edit2, Trash2, PlusCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function Feeding() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [pets, setPets] = useState<Pet[]>([]);
   const [foods, setFoods] = useState<Food[]>([]);
   const [feedings, setFeedings] = useState<FeedingEntry[]>([]);
@@ -145,7 +147,7 @@ export default function Feeding() {
   };
 
   const handleDelete = async (feedingId: string) => {
-    if (!confirm('Are you sure you want to delete this feeding record?')) {
+    if (!confirm(t('feeding.deleteConfirm'))) {
       return;
     }
 
@@ -174,8 +176,8 @@ export default function Feeding() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Feeding Records</h1>
-          <p className="text-gray-600">Track your pets' food intake and calculate consumption</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('feeding.title')}</h1>
+          <p className="text-gray-600">{t('feeding.subtitle')}</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
@@ -183,16 +185,16 @@ export default function Feeding() {
           disabled={pets.length === 0 || foods.length === 0}
         >
           <Plus className="w-4 h-4 mr-2" />
-          Add Feeding
+          {t('feeding.addFeeding')}
         </button>
       </div>
 
       {pets.length === 0 || foods.length === 0 ? (
         <div className="text-center py-12">
           <PlusCircle className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">Setup Required</h3>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">{t('feeding.setupRequired')}</h3>
           <p className="mt-1 text-sm text-gray-500">
-            You need to add at least one pet and one food before recording feedings.
+            {t('feeding.setupDescription')}
           </p>
         </div>
       ) : null}
@@ -202,18 +204,18 @@ export default function Feeding() {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              {editingFeeding ? 'Edit Feeding' : 'Add New Feeding'}
+              {editingFeeding ? t('feeding.editFeeding') : t('feeding.addNewFeeding')}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="label">Pet *</label>
+                <label className="label">{t('feeding.pet')} *</label>
                 <select
                   value={formData.pet_id}
                   onChange={(e) => setFormData({ ...formData, pet_id: e.target.value })}
                   className="input"
                   required
                 >
-                  <option value="">Select a pet</option>
+                  <option value="">{t('feeding.selectPet')}</option>
                   {pets.map((pet) => (
                     <option key={pet.id} value={pet.id}>
                       {pet.name}
@@ -223,14 +225,14 @@ export default function Feeding() {
               </div>
 
               <div>
-                <label className="label">Food *</label>
+                <label className="label">{t('feeding.food')} *</label>
                 <select
                   value={formData.food_id}
                   onChange={(e) => setFormData({ ...formData, food_id: e.target.value })}
                   className="input"
                   required
                 >
-                  <option value="">Select a food</option>
+                  <option value="">{t('feeding.selectFood')}</option>
                   {foods.map((food) => (
                     <option key={food.id} value={food.id}>
                       {food.name} {food.brand && `(${food.brand})`}
@@ -240,7 +242,7 @@ export default function Feeding() {
               </div>
 
               <div>
-                <label className="label">Amount Put Out (grams) *</label>
+                <label className="label">{t('feeding.amountPutOut')} *</label>
                 <input
                   type="number"
                   step="0.1"
@@ -252,7 +254,7 @@ export default function Feeding() {
               </div>
 
               <div>
-                <label className="label">Amount Not Eaten (grams)</label>
+                <label className="label">{t('feeding.amountNotEaten')}</label>
                 <input
                   type="number"
                   step="0.1"
@@ -263,7 +265,7 @@ export default function Feeding() {
               </div>
 
               <div>
-                <label className="label">Amount Refilled (grams)</label>
+                <label className="label">{t('feeding.amountRefilled')}</label>
                 <input
                   type="number"
                   step="0.1"
@@ -274,7 +276,7 @@ export default function Feeding() {
               </div>
 
               <div>
-                <label className="label">Fed At</label>
+                <label className="label">{t('feeding.fedAt')}</label>
                 <input
                   type="datetime-local"
                   value={formData.fed_at}
@@ -284,7 +286,7 @@ export default function Feeding() {
               </div>
 
               <div>
-                <label className="label">Notes</label>
+                <label className="label">{t('feeding.notes')}</label>
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
@@ -295,7 +297,7 @@ export default function Feeding() {
 
               <div className="flex space-x-3 pt-4">
                 <button type="submit" className="btn-primary flex-1">
-                  {editingFeeding ? 'Update' : 'Add'} Feeding
+                  {editingFeeding ? t('feeding.update') : t('feeding.add')} {t('feeding.title')}
                 </button>
                 <button
                   type="button"
@@ -314,7 +316,7 @@ export default function Feeding() {
                   }}
                   className="btn-secondary flex-1"
                 >
-                  Cancel
+                  {t('feeding.cancel')}
                 </button>
               </div>
             </form>
@@ -326,8 +328,8 @@ export default function Feeding() {
       {feedings.length === 0 ? (
         <div className="text-center py-12">
           <PlusCircle className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No feeding records</h3>
-          <p className="mt-1 text-sm text-gray-500">Start tracking your pets' food intake.</p>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">{t('feeding.noFeedings')}</h3>
+          <p className="mt-1 text-sm text-gray-500">{t('feeding.noFeedingsDescription')}</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -346,32 +348,32 @@ export default function Feeding() {
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
-                      <span className="font-medium text-gray-700">Put Out:</span>
-                      <p className="text-gray-900">{feeding.amount_put_out}g</p>
+                      <span className="font-medium text-gray-700">{t('feeding.putOut')}:</span>
+                      <p className="text-gray-900">{feeding.amount_put_out}{t('common.grams')}</p>
                     </div>
                     {feeding.amount_not_eaten && (
                       <div>
-                        <span className="font-medium text-gray-700">Not Eaten:</span>
-                        <p className="text-gray-900">{feeding.amount_not_eaten}g</p>
+                        <span className="font-medium text-gray-700">{t('feeding.notEaten')}:</span>
+                        <p className="text-gray-900">{feeding.amount_not_eaten}{t('common.grams')}</p>
                       </div>
                     )}
                     {feeding.amount_refilled && (
                       <div>
-                        <span className="font-medium text-gray-700">Refilled:</span>
-                        <p className="text-gray-900">{feeding.amount_refilled}g</p>
+                        <span className="font-medium text-gray-700">{t('feeding.refilled')}:</span>
+                        <p className="text-gray-900">{feeding.amount_refilled}{t('common.grams')}</p>
                       </div>
                     )}
                     <div>
-                      <span className="font-medium text-gray-700">Consumed:</span>
-                      <p className="text-green-600 font-semibold">{feeding.actual_consumed}g</p>
+                      <span className="font-medium text-gray-700">{t('feeding.consumed')}:</span>
+                      <p className="text-green-600 font-semibold">{feeding.actual_consumed}{t('common.grams')}</p>
                     </div>
                   </div>
 
                   {feeding.calories_consumed && (
                     <div className="mt-2">
-                      <span className="text-sm font-medium text-gray-700">Calories: </span>
+                      <span className="text-sm font-medium text-gray-700">{t('feeding.calories')}: </span>
                       <span className="text-sm text-orange-600 font-semibold">
-                        {Math.round(feeding.calories_consumed)} cal
+                        {Math.round(feeding.calories_consumed)} {t('common.cal')}
                       </span>
                     </div>
                   )}

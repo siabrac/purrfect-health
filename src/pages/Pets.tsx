@@ -132,15 +132,15 @@ export default function Pets() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Pets</h1>
-          <p className="text-gray-600">Manage your pets and their information</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('pets.title')}</h1>
+          <p className="text-gray-600">{t('pets.subtitle')}</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
           className="btn-primary flex items-center"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Add Pet
+          {t('pets.addPet')}
         </button>
       </div>
 
@@ -149,11 +149,11 @@ export default function Pets() {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              {editingPet ? 'Edit Pet' : 'Add New Pet'}
+              {editingPet ? t('pets.editPet') : t('pets.addNewPet')}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="label">Name *</label>
+                <label className="label">{t('pets.name')} *</label>
                 <input
                   type="text"
                   value={formData.name}
@@ -164,23 +164,23 @@ export default function Pets() {
               </div>
 
               <div>
-                <label className="label">Species *</label>
+                <label className="label">{t('pets.species')} *</label>
                 <select
                   value={formData.species}
                   onChange={(e) => setFormData({ ...formData, species: e.target.value as Pet['species'] })}
                   className="input"
                   required
                 >
-                  <option value="dog">Dog</option>
-                  <option value="cat">Cat</option>
-                  <option value="bird">Bird</option>
-                  <option value="rabbit">Rabbit</option>
-                  <option value="other">Other</option>
+                  <option value="dog">{t('species.dog')}</option>
+                  <option value="cat">{t('species.cat')}</option>
+                  <option value="bird">{t('species.bird')}</option>
+                  <option value="rabbit">{t('species.rabbit')}</option>
+                  <option value="other">{t('species.other')}</option>
                 </select>
               </div>
 
               <div>
-                <label className="label">Breed</label>
+                <label className="label">{t('pets.breed')}</label>
                 <input
                   type="text"
                   value={formData.breed}
@@ -190,7 +190,7 @@ export default function Pets() {
               </div>
 
               <div>
-                <label className="label">Birth Date</label>
+                <label className="label">{t('pets.birthDate')}</label>
                 <input
                   type="date"
                   value={formData.birth_date}
@@ -200,7 +200,7 @@ export default function Pets() {
               </div>
 
               <div>
-                <label className="label">Target Weight (kg)</label>
+                <label className="label">{t('pets.targetWeight')}</label>
                 <input
                   type="number"
                   step="0.1"
@@ -212,7 +212,7 @@ export default function Pets() {
 
               <div className="flex space-x-3 pt-4">
                 <button type="submit" className="btn-primary flex-1">
-                  {editingPet ? 'Update' : 'Add'} Pet
+                  {editingPet ? t('pets.update') : t('pets.add')} Pet
                 </button>
                 <button
                   type="button"
@@ -223,7 +223,7 @@ export default function Pets() {
                   }}
                   className="btn-secondary flex-1"
                 >
-                  Cancel
+                  {t('pets.cancel')}
                 </button>
               </div>
             </form>
@@ -235,12 +235,12 @@ export default function Pets() {
       {pets.length === 0 ? (
         <div className="text-center py-12">
           <Heart className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No pets</h3>
-          <p className="mt-1 text-sm text-gray-500">Get started by adding your first pet.</p>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">{t('pets.noPets')}</h3>
+          <p className="mt-1 text-sm text-gray-500">{t('pets.noPetsDescription')}</p>
           <div className="mt-6">
             <button onClick={() => setShowForm(true)} className="btn-primary">
               <Plus className="w-4 h-4 mr-2" />
-              Add Pet
+              {t('pets.addPet')}
             </button>
           </div>
         </div>
@@ -251,18 +251,18 @@ export default function Pets() {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900">{pet.name}</h3>
-                  <p className="text-sm text-gray-600 capitalize">{pet.species}</p>
+                  <p className="text-sm text-gray-600 capitalize">{t(`species.${pet.species}`)}</p>
                   {pet.breed && (
                     <p className="text-sm text-gray-500">{pet.breed}</p>
                   )}
                   {pet.birth_date && (
                     <p className="text-sm text-gray-500">
-                      Age: {getAge(pet.birth_date)}
+                      {t('pets.age')}: {getAge(pet.birth_date)}
                     </p>
                   )}
                   {pet.target_weight && (
                     <p className="text-sm text-gray-500">
-                      Target: {pet.target_weight}kg
+                      {t('pets.target')}: {pet.target_weight}{t('common.kg')}
                     </p>
                   )}
                 </div>

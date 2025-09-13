@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Pet, FeedingEntry, WeightEntry } from '../types';
 import { Calendar, TrendingUp, Scale, Utensils } from 'lucide-react';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
@@ -21,6 +22,7 @@ import {
 
 export default function Analytics() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [pets, setPets] = useState<Pet[]>([]);
   const [selectedPet, setSelectedPet] = useState<string>('all');
   const [timeRange, setTimeRange] = useState<'week' | 'month' | '3months'>('month');
@@ -154,20 +156,20 @@ export default function Analytics() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-        <p className="text-gray-600">Track your pets' weight trends and feeding patterns</p>
+        <h1 className="text-2xl font-bold text-gray-900">{t('analytics.title')}</h1>
+        <p className="text-gray-600">{t('analytics.subtitle')}</p>
       </div>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div>
-          <label className="label">Pet</label>
+          <label className="label">{t('analytics.pet')}</label>
           <select
             value={selectedPet}
             onChange={(e) => setSelectedPet(e.target.value)}
             className="input w-full sm:w-48"
           >
-            <option value="all">All Pets</option>
+            <option value="all">{t('analytics.allPets')}</option>
             {pets.map((pet) => (
               <option key={pet.id} value={pet.id}>
                 {pet.name}
@@ -177,15 +179,15 @@ export default function Analytics() {
         </div>
 
         <div>
-          <label className="label">Time Range</label>
+          <label className="label">{t('analytics.timeRange')}</label>
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value as any)}
             className="input w-full sm:w-48"
           >
-            <option value="week">Last Week</option>
-            <option value="month">Last Month</option>
-            <option value="3months">Last 3 Months</option>
+            <option value="week">{t('analytics.lastWeek')}</option>
+            <option value="month">{t('analytics.lastMonth')}</option>
+            <option value="3months">{t('analytics.last3Months')}</option>
           </select>
         </div>
       </div>
@@ -193,8 +195,8 @@ export default function Analytics() {
       {pets.length === 0 ? (
         <div className="text-center py-12">
           <Scale className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No pets found</h3>
-          <p className="mt-1 text-sm text-gray-500">Add some pets to see analytics.</p>
+         <h3 className="mt-2 text-sm font-medium text-gray-900">{t('analytics.noPetsFound')}</h3>
+         <p className="mt-1 text-sm text-gray-500">{t('analytics.noPetsDescription')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -202,10 +204,10 @@ export default function Analytics() {
           <div className="card">
             <div className="flex items-center mb-4">
               <Scale className="w-5 h-5 text-primary-600 mr-2" />
-              <h2 className="text-lg font-semibold text-gray-900">Weight Trends</h2>
+              <h2 className="text-lg font-semibold text-gray-900">{t('analytics.weightTrends')}</h2>
             </div>
             {weightData.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No weight data available</p>
+              <p className="text-gray-500 text-center py-8">{t('analytics.noWeightData')}</p>
             ) : (
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
@@ -214,8 +216,8 @@ export default function Analytics() {
                     <XAxis dataKey="date" />
                     <YAxis />
                     <Tooltip 
-                      formatter={(value, name) => [`${value} kg`, 'Weight']}
-                      labelFormatter={(label) => `Date: ${label}`}
+                      formatter={(value, name) => [`${value} ${t('common.kg')}`, t('analytics.weight')]}
+                      labelFormatter={(label) => `${t('analytics.date')}: ${label}`}
                     />
                     <Line 
                       type="monotone" 
@@ -234,10 +236,10 @@ export default function Analytics() {
           <div className="card">
             <div className="flex items-center mb-4">
               <TrendingUp className="w-5 h-5 text-orange-600 mr-2" />
-              <h2 className="text-lg font-semibold text-gray-900">Daily Calories</h2>
+              <h2 className="text-lg font-semibold text-gray-900">{t('analytics.dailyCalories')}</h2>
             </div>
             {calorieData.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No calorie data available</p>
+              <p className="text-gray-500 text-center py-8">{t('analytics.noCalorieData')}</p>
             ) : (
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
@@ -246,7 +248,7 @@ export default function Analytics() {
                     <XAxis dataKey="date" />
                     <YAxis />
                     <Tooltip 
-                      formatter={(value, name) => [`${value} cal`, 'Calories']}
+                      formatter={(value, name) => [`${value} ${t('common.cal')}`, t('feeding.calories')]}
                     />
                     <Bar dataKey="calories" fill="#f59e0b" />
                   </BarChart>
@@ -259,7 +261,7 @@ export default function Analytics() {
           <div className="card lg:col-span-2">
             <div className="flex items-center mb-4">
               <Utensils className="w-5 h-5 text-green-600 mr-2" />
-              <h2 className="text-lg font-semibold text-gray-900">Food Distribution</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('analytics.foodDistribution')}</h2>
             </div>
             {foodDistribution.length === 0 ? (
               <p className="text-gray-500 text-center py-8">No feeding data available</p>
@@ -280,6 +282,7 @@ export default function Analytics() {
                         ))}
                       </Pie>
                       <Tooltip formatter={(value) => [`${value}g`, 'Amount']} />
+                      <Tooltip formatter={(value) => [`${value}${t('common.grams')}`, t('analytics.amount')]} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -295,6 +298,7 @@ export default function Analytics() {
                           <span className="text-sm text-gray-700">{food.name}</span>
                         </div>
                         <span className="text-sm font-medium text-gray-900">{food.value}g</span>
+                        <span className="text-sm font-medium text-gray-900">{food.value}{t('common.grams')}</span>
                       </div>
                     ))}
                   </div>
@@ -303,7 +307,7 @@ export default function Analytics() {
             )}
           </div>
         </div>
-      )}
+            <p className="text-gray-500 text-center py-8">{t('analytics.noFeedingData')}</p>
     </div>
   );
 }

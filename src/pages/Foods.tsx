@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Food } from '../types';
 import { Plus, Edit2, Trash2, Utensils } from 'lucide-react';
 
 export default function Foods() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [foods, setFoods] = useState<Food[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -99,7 +101,7 @@ export default function Foods() {
   };
 
   const handleDelete = async (foodId: string) => {
-    if (!confirm('Are you sure you want to delete this food? This will also delete all associated feeding records.')) {
+    if (!confirm(t('foods.deleteConfirm'))) {
       return;
     }
 
@@ -128,15 +130,15 @@ export default function Foods() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Food Database</h1>
-          <p className="text-gray-600">Manage your pet foods and their nutritional information</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('foods.title')}</h1>
+          <p className="text-gray-600">{t('foods.subtitle')}</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
           className="btn-primary flex items-center"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Add Food
+          {t('foods.addFood')}
         </button>
       </div>
 
@@ -145,11 +147,11 @@ export default function Foods() {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              {editingFood ? 'Edit Food' : 'Add New Food'}
+              {editingFood ? t('foods.editFood') : t('foods.addNewFood')}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="label">Food Name *</label>
+                <label className="label">{t('foods.foodName')} *</label>
                 <input
                   type="text"
                   value={formData.name}
@@ -160,7 +162,7 @@ export default function Foods() {
               </div>
 
               <div>
-                <label className="label">Brand</label>
+                <label className="label">{t('foods.brand')}</label>
                 <input
                   type="text"
                   value={formData.brand}
@@ -171,7 +173,7 @@ export default function Foods() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label">Calories per gram</label>
+                  <label className="label">{t('foods.caloriesPerGram')}</label>
                   <input
                     type="number"
                     step="0.01"
@@ -182,7 +184,7 @@ export default function Foods() {
                 </div>
 
                 <div>
-                  <label className="label">Protein per gram</label>
+                  <label className="label">{t('foods.proteinPerGram')}</label>
                   <input
                     type="number"
                     step="0.01"
@@ -193,7 +195,7 @@ export default function Foods() {
                 </div>
 
                 <div>
-                  <label className="label">Fat per gram</label>
+                  <label className="label">{t('foods.fatPerGram')}</label>
                   <input
                     type="number"
                     step="0.01"
@@ -204,7 +206,7 @@ export default function Foods() {
                 </div>
 
                 <div>
-                  <label className="label">Carbs per gram</label>
+                  <label className="label">{t('foods.carbsPerGram')}</label>
                   <input
                     type="number"
                     step="0.01"
@@ -217,7 +219,7 @@ export default function Foods() {
 
               <div className="flex space-x-3 pt-4">
                 <button type="submit" className="btn-primary flex-1">
-                  {editingFood ? 'Update' : 'Add'} Food
+                  {editingFood ? t('foods.update') : t('foods.add')} {t('foods.title')}
                 </button>
                 <button
                   type="button"
@@ -235,7 +237,7 @@ export default function Foods() {
                   }}
                   className="btn-secondary flex-1"
                 >
-                  Cancel
+                  {t('foods.cancel')}
                 </button>
               </div>
             </form>
@@ -247,12 +249,12 @@ export default function Foods() {
       {foods.length === 0 ? (
         <div className="text-center py-12">
           <Utensils className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No foods</h3>
-          <p className="mt-1 text-sm text-gray-500">Get started by adding your first food.</p>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">{t('foods.noFoods')}</h3>
+          <p className="mt-1 text-sm text-gray-500">{t('foods.noFoodsDescription')}</p>
           <div className="mt-6">
             <button onClick={() => setShowForm(true)} className="btn-primary">
               <Plus className="w-4 h-4 mr-2" />
-              Add Food
+              {t('foods.addFood')}
             </button>
           </div>
         </div>
@@ -270,21 +272,21 @@ export default function Foods() {
                   {food.calories_per_gram && (
                     <div className="mt-3 space-y-1">
                       <p className="text-sm text-gray-700">
-                        <span className="font-medium">Calories:</span> {food.calories_per_gram}/g
+                        <span className="font-medium">{t('foods.calories')}:</span> {food.calories_per_gram}/{t('common.grams')}
                       </p>
                       {food.protein_per_gram && (
                         <p className="text-sm text-gray-700">
-                          <span className="font-medium">Protein:</span> {food.protein_per_gram}g/g
+                          <span className="font-medium">{t('foods.protein')}:</span> {food.protein_per_gram}{t('common.grams')}/{t('common.grams')}
                         </p>
                       )}
                       {food.fat_per_gram && (
                         <p className="text-sm text-gray-700">
-                          <span className="font-medium">Fat:</span> {food.fat_per_gram}g/g
+                          <span className="font-medium">{t('foods.fat')}:</span> {food.fat_per_gram}{t('common.grams')}/{t('common.grams')}
                         </p>
                       )}
                       {food.carbs_per_gram && (
                         <p className="text-sm text-gray-700">
-                          <span className="font-medium">Carbs:</span> {food.carbs_per_gram}g/g
+                          <span className="font-medium">{t('foods.carbs')}:</span> {food.carbs_per_gram}{t('common.grams')}/{t('common.grams')}
                         </p>
                       )}
                     </div>
