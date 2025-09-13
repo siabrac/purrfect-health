@@ -22,7 +22,7 @@ import {
 
 export default function Analytics() {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, formatNumber } = useLanguage();
   const [pets, setPets] = useState<Pet[]>([]);
   const [selectedPet, setSelectedPet] = useState<string>('all');
   const [timeRange, setTimeRange] = useState<'week' | 'month' | '3months'>('month');
@@ -130,7 +130,7 @@ export default function Analytics() {
       const processedFoodData = Array.from(foodCounts.entries())
         .map(([name, amount], index) => ({
           name,
-          value: Math.round(amount),
+          value: parseFloat(amount.toFixed(1)),
           color: colors[index % colors.length]
         }))
         .sort((a, b) => b.value - a.value);
@@ -218,6 +218,8 @@ export default function Analytics() {
                     <Tooltip 
                       formatter={(value, name) => [`${value} ${t('common.kg')}`, t('analytics.weight')]}
                       labelFormatter={(label) => `${t('analytics.date')}: ${label}`}
+                      labelStyle={{ color: '#374151' }}
+                      contentStyle={{ backgroundColor: '#f9fafb', border: '1px solid #d1d5db' }}
                     />
                     <Line 
                       type="monotone" 
@@ -249,6 +251,8 @@ export default function Analytics() {
                     <YAxis />
                     <Tooltip 
                       formatter={(value, name) => [`${value} ${t('common.cal')}`, t('feeding.calories')]}
+                      labelStyle={{ color: '#374151' }}
+                      contentStyle={{ backgroundColor: '#f9fafb', border: '1px solid #d1d5db' }}
                     />
                     <Bar dataKey="calories" fill="#f59e0b" />
                   </BarChart>
@@ -281,7 +285,10 @@ export default function Analytics() {
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value) => [`${value}${t('common.grams')}`, t('analytics.amount')]} />
+                      <Tooltip 
+                        formatter={(value) => [`${formatNumber(value)}${t('common.grams')}`, t('analytics.amount')]}
+                        contentStyle={{ backgroundColor: '#f9fafb', border: '1px solid #d1d5db' }}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -296,7 +303,7 @@ export default function Analytics() {
                           />
                           <span className="text-sm text-gray-700">{food.name}</span>
                         </div>
-                        <span className="text-sm font-medium text-gray-900">{food.value}{t('common.grams')}</span>
+                        <span className="text-sm font-medium text-gray-900">{formatNumber(food.value)}{t('common.grams')}</span>
                       </div>
                     ))}
                   </div>
